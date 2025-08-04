@@ -281,7 +281,7 @@ function generateOrderId(): string {
 // Generate PIX code
 function generatePixCode(orderId: string, amount: number): string {
   // Simplified PIX code generation (in real implementation, use proper PIX library)
-  const pixKey = "81979798540" // Phone number
+  const pixKey = "81997979854" // Phone number
   const merchantName = "ACESSORIOS ONNI"
   const merchantCity = "RECIFE"
   const txId = orderId
