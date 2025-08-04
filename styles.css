@@ -1199,7 +1199,33 @@ body {
 .password-input {
   position: relative;
 }
+.pix-qr-code {
+  margin: 20px 0;
+  text-align: center;
+  padding: 15px;
+  background: white;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 250px;
+}
 
+.pix-qr-code canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+.qr-placeholder {
+  text-align: center;
+  color: #666;
+}
+
+.qr-placeholder i {
+  font-size: 48px;
+  margin-bottom: 10px;
+  display: block;
+}
 .password-toggle {
   position: absolute;
   right: 0.75rem;

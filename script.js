@@ -200,6 +200,40 @@ function nextVideo() {
   switchToVideo(nextIndex)
 }
 
+// Generate QR Code
+function generateQRCode(pixContent) {
+  const qrCodeContainer = document.querySelector(".pix-qr-code");
+  if (!qrCodeContainer) return;
+
+  // Clear previous content
+  qrCodeContainer.innerHTML = "";
+
+  // Create canvas for QR Code
+  const canvas = document.createElement("canvas");
+  qrCodeContainer.appendChild(canvas);
+
+  // Generate QR Code
+  QRCode.toCanvas(canvas, pixContent, {
+    width: 200,
+    margin: 2,
+    color: {
+      dark: '#000000',
+      light: '#ffffff'
+    }
+  }, (error) => {
+    if (error) {
+      console.error("Error generating QR Code:", error);
+      qrCodeContainer.innerHTML = `
+        <div class="qr-placeholder">
+          <i data-lucide="qr-code"></i>
+          <p>Escaneie com seu app do banco</p>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+  });
+}
+
 // Generate order ID
 function generateOrderId() {
   const timestamp = Date.now().toString()
@@ -247,19 +281,23 @@ function openWhatsApp(product) {
 }
 
 // PIX function
+// PIX function
 function openPixModal(product) {
-  const orderId = generateOrderId()
-  const order = saveOrder(orderId, product, "pix")
-  currentPixOrder = order
+  const orderId = generateOrderId();
+  const order = saveOrder(orderId, product, "pix");
+  currentPixOrder = order;
 
   // Update modal content
-  document.getElementById("pix-product-name").textContent = product.name
-  document.getElementById("pix-product-price").textContent = `R$ ${product.price.toFixed(2).replace(".", ",")}`
-  document.getElementById("pix-order-id").textContent = `Pedido: ${orderId}`
-  document.getElementById("pix-code").textContent = order.pixCode
+  document.getElementById("pix-product-name").textContent = product.name;
+  document.getElementById("pix-product-price").textContent = `R$ ${product.price.toFixed(2).replace(".", ",")}`;
+  document.getElementById("pix-order-id").textContent = `Pedido: ${orderId}`;
+  document.getElementById("pix-code").textContent = order.pixCode;
 
   // Show modal
-  document.getElementById("pix-modal").style.display = "flex"
+  document.getElementById("pix-modal").style.display = "flex";
+
+  // Generate QR Code
+  generateQRCode(order.pixCode);
 }
 
 // Close PIX modal
