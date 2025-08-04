@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import {
   Heart,
   ShoppingBag,
@@ -49,6 +49,91 @@ interface Order {
   timestamp: number
   status: "pending" | "paid" | "cancelled"
   pixCode: string
+}
+
+// Video Carousel Component
+function VideoCarousel() {
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0)
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  const videos = [
+    "/videos/hero-video.mp4",
+    "/videos/hero-video.mp4", // Usando o mesmo vídeo duas vezes como exemplo
+  ]
+
+  const handleVideoEnd = () => {
+    const nextIndex = (currentVideoIndex + 1) % videos.length
+    setCurrentVideoIndex(nextIndex)
+  }
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.load()
+      videoRef.current.play().catch(console.error)
+    }
+  }, [currentVideoIndex])
+
+  return (
+    <div className="max-w-4xl mx-auto relative">
+      <div className="relative overflow-hidden rounded-2xl shadow-2xl">
+        <video
+          ref={videoRef}
+          className="w-full h-[400px] md:h-[500px] object-cover"
+          muted
+          playsInline
+          onEnded={handleVideoEnd}
+          key={currentVideoIndex}
+        >
+          <source src={videos[currentVideoIndex]} type="video/mp4" />
+          Seu navegador não suporta vídeo HTML5.
+        </video>
+
+        {/* Video Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-stone-900/60 via-transparent to-stone-900/30"></div>
+
+        {/* Video Corner Badge */}
+        <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-600/90 to-amber-700/90 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm font-semibold">
+          <Sparkles className="h-4 w-4 inline mr-2" />
+          Coleção 2024
+        </div>
+
+        {/* Video Progress Indicators */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+          {videos.map((_, index) => (
+            <div
+              key={index}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                index === currentVideoIndex ? "bg-amber-400 w-8" : "bg-white/50"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Call to Action Buttons Below Video */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
+        <Button
+          size="lg"
+          onClick={() => window.open("https://www.instagram.com/onniacessorios/", "_blank")}
+          className="bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-700 hover:to-pink-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-105"
+        >
+          <Instagram className="h-5 w-5 mr-2" />
+          @onniacessorios
+        </Button>
+
+        <Button
+          size="lg"
+          onClick={() =>
+            window.open("https://wa.me/5581979798540?text=Olá! Gostaria de conhecer mais sobre a coleção!", "_blank")
+          }
+          className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-105"
+        >
+          <MessageCircle className="h-5 w-5 mr-2" />
+          Fale Conosco
+        </Button>
+      </div>
+    </div>
+  )
 }
 
 // Mock data - expanded with new categories
@@ -704,7 +789,7 @@ export default function HomePage() {
         {/* Divider */}
         <div className="h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent"></div>
 
-        {/* Video Section - Substitui a seção do Instagram */}
+        {/* Video Section - Com carousel de vídeos */}
         <section className="py-20 bg-gradient-to-br from-stone-900/90 via-amber-900/90 to-stone-800/90 backdrop-blur-sm">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
@@ -714,49 +799,7 @@ export default function HomePage() {
               <p className="text-stone-300 text-lg">Veja de perto a qualidade e elegância de nossos acessórios</p>
             </div>
 
-            <div className="max-w-4xl mx-auto relative">
-              <div className="relative overflow-hidden rounded-2xl shadow-2xl">
-                <video className="w-full h-[400px] md:h-[500px] object-cover" autoPlay loop muted playsInline>
-                  <source src="/videos/hero-video.mp4" type="video/mp4" />
-                  Seu navegador não suporta vídeo HTML5.
-                </video>
-
-                {/* Video Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-stone-900/60 via-transparent to-stone-900/30"></div>
-
-                {/* Video Corner Badge */}
-                <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-600/90 to-amber-700/90 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm font-semibold">
-                  <Sparkles className="h-4 w-4 inline mr-2" />
-                  Coleção 2024
-                </div>
-              </div>
-
-              {/* Call to Action Buttons Below Video */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
-                <Button
-                  size="lg"
-                  onClick={() => window.open("https://www.instagram.com/onniacessorios/", "_blank")}
-                  className="bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-700 hover:to-pink-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-105"
-                >
-                  <Instagram className="h-5 w-5 mr-2" />
-                  @onniacessorios
-                </Button>
-
-                <Button
-                  size="lg"
-                  onClick={() =>
-                    window.open(
-                      "https://wa.me/5581979798540?text=Olá! Gostaria de conhecer mais sobre a coleção!",
-                      "_blank",
-                    )
-                  }
-                  className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-105"
-                >
-                  <MessageCircle className="h-5 w-5 mr-2" />
-                  Fale Conosco
-                </Button>
-              </div>
-            </div>
+            <VideoCarousel />
           </div>
         </section>
 

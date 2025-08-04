@@ -384,6 +384,36 @@ body {
   height: 1rem;
 }
 
+/* Video Progress Indicators */
+.video-progress-indicators {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  z-index: 20;
+}
+
+.progress-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.progress-dot.active {
+  background: #fbbf24;
+  width: 2rem;
+  border-radius: 1rem;
+}
+
+.progress-dot:hover {
+  background: rgba(251, 191, 36, 0.8);
+}
+
 .video-cta-buttons {
   display: flex;
   flex-direction: column;
@@ -1264,6 +1294,10 @@ body {
     right: 0.75rem;
     padding: 0.375rem 0.75rem;
     font-size: 0.75rem;
+  }
+
+  .video-progress-indicators {
+    bottom: 0.75rem;
   }
 }
 

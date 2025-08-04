@@ -2,6 +2,14 @@
 const DEFAULT_PRODUCT_IMAGE =
   "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/download-japQzoFSzfLJdQBuxq6rFrzntKOXlr.jpeg"
 
+// Video carousel configuration
+const videos = [
+  "videos/hero-video.mp4",
+  "videos/hero-video.mp4", // Usando o mesmo vídeo duas vezes como exemplo
+]
+
+let currentVideoIndex = 0
+
 // Products data with updated images
 const products = [
   // Joias
@@ -140,6 +148,57 @@ const products = [
 // Filter state
 let filteredProducts = [...products]
 let currentPixOrder = null
+
+// Video carousel functions
+function initializeVideoCarousel() {
+  const video = document.getElementById("main-video")
+  const progressDots = document.querySelectorAll(".progress-dot")
+
+  if (!video || !progressDots.length) return
+
+  // Handle video end event
+  video.addEventListener("ended", () => {
+    nextVideo()
+  })
+
+  // Handle progress dot clicks
+  progressDots.forEach((dot, index) => {
+    dot.addEventListener("click", () => {
+      switchToVideo(index)
+    })
+  })
+
+  // Start first video
+  switchToVideo(0)
+}
+
+function switchToVideo(index) {
+  const video = document.getElementById("main-video")
+  const progressDots = document.querySelectorAll(".progress-dot")
+
+  if (!video || !progressDots.length || index >= videos.length) return
+
+  currentVideoIndex = index
+
+  // Update video source
+  video.src = videos[currentVideoIndex]
+  video.load()
+  video.play().catch(console.error)
+
+  // Update progress indicators
+  progressDots.forEach((dot, i) => {
+    if (i === currentVideoIndex) {
+      dot.classList.add("active")
+    } else {
+      dot.classList.remove("active")
+    }
+  })
+}
+
+function nextVideo() {
+  const nextIndex = (currentVideoIndex + 1) % videos.length
+  switchToVideo(nextIndex)
+}
 
 // Generate order ID
 function generateOrderId() {
@@ -458,6 +517,9 @@ function initializePage() {
     products.length = loadedProducts.length
     filteredProducts = [...products]
   }
+
+  // Initialize video carousel
+  initializeVideoCarousel()
 
   // Update sections visibility based on available products
   updateCategorySections()
