@@ -3,7 +3,7 @@
 // Hash credentials (change these!)
 const ADMIN_CREDENTIALS = {
   username: "ef63d97825c0d5fe735fc3f0254b5de102027381579333528bb5101f0734e024", // hash of "admin"
-  password: "95bc58b5d0c5f1904be2654279d59bc6dab1f1d18fb4584d17f23cde33e68abd", // hash of "secret123"
+  password: "09c97767a8412fb6263a8daaedd018c30eea7903c72541f2b70fd6b2b7c150c8", // hash of "secret123"
 }
 
 const SESSION_DURATION = 2 * 60 * 60 * 1000 // 2 hours
