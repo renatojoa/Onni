@@ -139,7 +139,7 @@ let filteredProducts = [...products]
 // WhatsApp function
 function openWhatsApp(product) {
   const message = `Olá! Vim Pelo Site e Tenho interesse no produto: ${product.name} - R$ ${product.price.toFixed(2).replace(".", ",")}`
-  const whatsappUrl = `https://wa.me/979798540?text=${encodeURIComponent(message)}`
+  const whatsappUrl = `https://wa.me/5581997979854?text=${encodeURIComponent(message)}`
   window.open(whatsappUrl, "_blank")
 }
 
