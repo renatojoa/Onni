@@ -139,10 +139,98 @@ const products = [
 
 // Filter state
 let filteredProducts = [...products]
+let currentPixOrder = null
+
+// Generate order ID
+function generateOrderId() {
+  const timestamp = Date.now().toString()
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase()
+  return `ON${timestamp.slice(-6)}${random}`
+}
+
+// Generate PIX code
+function generatePixCode(orderId, amount) {
+  const pixKey = "81979798540"
+  const merchantName = "ACESSORIOS ONNI"
+  const merchantCity = "RECIFE"
+  const txId = orderId
+
+  return `00020126580014BR.GOV.BCB.PIX0136${pixKey}0208${txId}5204000053039865802BR5913${merchantName}6005${merchantCity}62070503***6304`
+}
+
+// Save order
+function saveOrder(orderId, product, type) {
+  const order = {
+    id: orderId,
+    productId: product.id,
+    productName: product.name,
+    price: product.price,
+    timestamp: Date.now(),
+    status: "pending",
+    pixCode: type === "pix" ? generatePixCode(orderId, product.price) : "",
+  }
+
+  const existingOrders = JSON.parse(localStorage.getItem("orders") || "[]")
+  existingOrders.push(order)
+  localStorage.setItem("orders", JSON.stringify(existingOrders))
+
+  return order
+}
 
 // WhatsApp function
 function openWhatsApp(product) {
-  const message = `Olá! Tenho interesse no produto: ${product.name} - R$ ${product.price.toFixed(2).replace(".", ",")}`
+  const orderId = generateOrderId()
+  saveOrder(orderId, product, "whatsapp")
+
+  const message = `Olá! Tenho interesse no produto: ${product.name} - R$ ${product.price.toFixed(2).replace(".", ",")} (Pedido: ${orderId})`
+  const whatsappUrl = `https://wa.me/5581979798540?text=${encodeURIComponent(message)}`
+  window.open(whatsappUrl, "_blank")
+}
+
+// PIX function
+function openPixModal(product) {
+  const orderId = generateOrderId()
+  const order = saveOrder(orderId, product, "pix")
+  currentPixOrder = order
+
+  // Update modal content
+  document.getElementById("pix-product-name").textContent = product.name
+  document.getElementById("pix-product-price").textContent = `R$ ${product.price.toFixed(2).replace(".", ",")}`
+  document.getElementById("pix-order-id").textContent = `Pedido: ${orderId}`
+  document.getElementById("pix-code").textContent = order.pixCode
+
+  // Show modal
+  document.getElementById("pix-modal").style.display = "flex"
+}
+
+// Close PIX modal
+function closePixModal() {
+  document.getElementById("pix-modal").style.display = "none"
+  currentPixOrder = null
+}
+
+// Copy PIX code
+function copyPixCode() {
+  const pixCode = document.getElementById("pix-code").textContent
+  navigator.clipboard.writeText(pixCode).then(() => {
+    const button = event.target.closest("button")
+    const originalText = button.innerHTML
+    button.innerHTML = '<i data-lucide="check"></i> Copiado!'
+
+    setTimeout(() => {
+      button.innerHTML = originalText
+      lucide.createIcons()
+    }, 2000)
+
+    lucide.createIcons()
+  })
+}
+
+// Send PIX receipt
+function sendPixReceipt() {
+  if (!currentPixOrder) return
+
+  const message = `Olá! Realizei o pagamento PIX do pedido ${currentPixOrder.id} - ${currentPixOrder.productName}. Segue o comprovante:`
   const whatsappUrl = `https://wa.me/5581979798540?text=${encodeURIComponent(message)}`
   window.open(whatsappUrl, "_blank")
 }
@@ -153,7 +241,6 @@ function loadProductsFromStorage() {
   if (saved) {
     try {
       const adminProducts = JSON.parse(saved)
-      // Update global products array
       Object.assign(products, adminProducts)
       products.length = adminProducts.length
       return adminProducts
@@ -169,12 +256,10 @@ function startProductSync() {
   setInterval(() => {
     const loadedProducts = loadProductsFromStorage()
     if (loadedProducts.length !== products.length) {
-      // Re-initialize page with new products
       Object.assign(products, loadedProducts)
       products.length = loadedProducts.length
       filteredProducts = [...products]
 
-      // Re-setup carousels
       const joias = products.filter((p) => p.type === "Joias")
       const semijoias = products.filter((p) => p.type === "Semijoias")
       const bijuterias = products.filter((p) => p.type === "Bijuterias")
@@ -183,88 +268,49 @@ function startProductSync() {
       setupCarousel("semijoias-carousel", "semijoias-prev", "semijoias-next", semijoias)
       setupCarousel("bijuterias-carousel", "bijuterias-prev", "bijuterias-next", bijuterias)
 
-      // Re-render products
       renderProducts()
     }
-  }, 3000) // Check every 3 seconds
+  }, 3000)
 }
 
-// Video controls
-function setupVideoControls() {
-  const video = document.getElementById("hero-video")
-  const playBtn = document.getElementById("video-play-btn")
-  const playIcon = document.getElementById("video-play-icon")
-  const playText = document.getElementById("video-play-text")
-
-  if (!video || !playBtn) return
-
-  playBtn.addEventListener("click", () => {
-    if (video.paused) {
-      video.play()
-      playIcon.setAttribute("data-lucide", "pause")
-      playText.textContent = "Pausar"
-    } else {
-      video.pause()
-      playIcon.setAttribute("data-lucide", "play")
-      playText.textContent = "Reproduzir"
-    }
-
-    // Refresh icons
-    if (typeof lucide !== "undefined" && lucide.createIcons) {
-      lucide.createIcons()
-    }
-  })
-
-  // Update button state based on video events
-  video.addEventListener("play", () => {
-    playIcon.setAttribute("data-lucide", "pause")
-    playText.textContent = "Pausar"
-    if (typeof lucide !== "undefined" && lucide.createIcons) {
-      lucide.createIcons()
-    }
-  })
-
-  video.addEventListener("pause", () => {
-    playIcon.setAttribute("data-lucide", "play")
-    playText.textContent = "Reproduzir"
-    if (typeof lucide !== "undefined" && lucide.createIcons) {
-      lucide.createIcons()
-    }
-  })
-}
-
-// Create product card HTML with improved image handling
+// Create product card HTML with PIX and WhatsApp buttons
 function createProductCard(product) {
   const productImage = product.image || DEFAULT_PRODUCT_IMAGE
 
   return `
-        <div class="product-card" onclick="openWhatsApp(${JSON.stringify(product).replace(/"/g, "&quot;")})">
-            <div class="product-image">
-                <img src="${productImage}" alt="${product.name}" loading="lazy" onerror="this.src='${DEFAULT_PRODUCT_IMAGE}'">
-                ${
-                  product.featured
-                    ? `
-                    <div class="product-badge">
-                        <i data-lucide="crown"></i>
-                        Destaque
-                    </div>
-                `
-                    : ""
-                }
-                <div class="product-type-badge">${product.type}</div>
+    <div class="product-card">
+      <div class="product-image">
+        <img src="${productImage}" alt="${product.name}" loading="lazy" onerror="this.src='${DEFAULT_PRODUCT_IMAGE}'">
+        ${
+          product.featured
+            ? `
+            <div class="product-badge">
+              <i data-lucide="crown"></i>
+              Destaque
             </div>
-            <h4 class="product-name">${product.name}</h4>
-            <p class="product-price">R$ ${product.price.toFixed(2).replace(".", ",")}</p>
-            <div class="product-tags">
-                <span class="product-tag">${product.material}</span>
-                <span class="product-tag">${product.size}</span>
-            </div>
-            <button class="product-btn">
-                <i data-lucide="message-circle"></i>
-                Desejo Comprar
-            </button>
-        </div>
-    `
+          `
+            : ""
+        }
+        <div class="product-type-badge">${product.type}</div>
+      </div>
+      <h4 class="product-name">${product.name}</h4>
+      <p class="product-price">R$ ${product.price.toFixed(2).replace(".", ",")}</p>
+      <div class="product-tags">
+        <span class="product-tag">${product.material}</span>
+        <span class="product-tag">${product.size}</span>
+      </div>
+      <div class="product-buttons">
+        <button class="product-btn btn-pix" onclick="openPixModal(${JSON.stringify(product).replace(/"/g, "&quot;")})">
+          <i data-lucide="qr-code"></i>
+          Pagar com PIX
+        </button>
+        <button class="product-btn btn-whatsapp" onclick="openWhatsApp(${JSON.stringify(product).replace(/"/g, "&quot;")})">
+          <i data-lucide="message-circle"></i>
+          Falar no WhatsApp
+        </button>
+      </div>
+    </div>
+  `
 }
 
 // Populate carousel
@@ -286,7 +332,6 @@ function setupCarousel(carouselId, prevBtnId, nextBtnId, products) {
     const visibleProducts = products.slice(currentIndex, currentIndex + itemsPerView)
     populateCarousel(carouselId, visibleProducts)
 
-    // Update button states
     prevBtn.disabled = currentIndex === 0
     nextBtn.disabled = currentIndex + itemsPerView >= products.length
   }
@@ -305,7 +350,6 @@ function setupCarousel(carouselId, prevBtnId, nextBtnId, products) {
     }
   })
 
-  // Initial load
   updateCarousel()
 }
 
@@ -351,7 +395,6 @@ function renderProducts() {
 
 // Initialize page
 function initializePage() {
-  // Load products from localStorage first
   const loadedProducts = loadProductsFromStorage()
   if (loadedProducts && loadedProducts.length > 0) {
     Object.assign(products, loadedProducts)
@@ -359,7 +402,6 @@ function initializePage() {
     filteredProducts = [...products]
   }
 
-  // Setup carousels
   const joias = products.filter((p) => p.type === "Joias")
   const semijoias = products.filter((p) => p.type === "Semijoias")
   const bijuterias = products.filter((p) => p.type === "Bijuterias")
@@ -368,13 +410,8 @@ function initializePage() {
   setupCarousel("semijoias-carousel", "semijoias-prev", "semijoias-next", semijoias)
   setupCarousel("bijuterias-carousel", "bijuterias-prev", "bijuterias-next", bijuterias)
 
-  // Setup video controls
-  setupVideoControls()
-
-  // Start product synchronization
   startProductSync()
 
-  // Setup filters
   const searchInput = document.getElementById("search-input")
   const typeFilter = document.getElementById("type-filter")
   const categoryFilter = document.getElementById("category-filter")
@@ -385,10 +422,8 @@ function initializePage() {
   categoryFilter?.addEventListener("change", filterProducts)
   colorFilter?.addEventListener("change", filterProducts)
 
-  // Initial render
   renderProducts()
 
-  // Smooth scrolling for anchor links
   document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
     anchor.addEventListener("click", function (e) {
       e.preventDefault()
@@ -402,52 +437,26 @@ function initializePage() {
     })
   })
 
-  // Listen for storage changes (when admin updates products)
+  // Close modal when clicking outside
+  document.getElementById("pix-modal")?.addEventListener("click", (e) => {
+    if (e.target.id === "pix-modal") {
+      closePixModal()
+    }
+  })
+
   window.addEventListener("storage", (e) => {
     if (e.key === "admin_products") {
       setTimeout(() => {
-        location.reload() // Reload page to show new products
+        location.reload()
       }, 1000)
     }
   })
 }
 
-// Initialize when DOM is loaded
 document.addEventListener("DOMContentLoaded", initializePage)
 
-// Declare lucide variable
 const lucide = {
   createIcons: () => {
-    // Placeholder for lucide.createIcons functionality
     console.log("Lucide icons created")
   },
 }
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Lista de vídeos disponíveis
-    const videos = [
-        'public/videos/oonni_bg.mp4',
-        'public/videos/oonni_bg_alternativo.mp4' // Substitua pelo caminho do seu segundo vídeo
-    ];
-    
-    // Seleciona um vídeo aleatório
-    const randomVideo = videos[Math.floor(Math.random() * videos.length)];
-    
-    // Obtém o elemento de vídeo
-    const videoElement = document.getElementById('hero-video');
-    
-    // Cria o elemento source
-    const sourceElement = document.createElement('source');
-    sourceElement.setAttribute('src', randomVideo);
-    sourceElement.setAttribute('type', 'video/mp4');
-    
-    // Adiciona o source ao vídeo
-    videoElement.appendChild(sourceElement);
-    
-    // Carrega o vídeo
-    videoElement.load();
-    
-    // Inicia o vídeo (necessário para alguns navegadores)
-    videoElement.play().catch(e => console.log("Autoplay não permitido: ", e));
-});
-</script>

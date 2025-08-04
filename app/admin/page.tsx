@@ -1,28 +1,39 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import {
-  Heart,
-  ShoppingBag,
-  MessageCircle,
-  Search,
-  Filter,
-  Sparkles,
+  Plus,
+  Edit,
+  Trash2,
+  Save,
+  X,
+  BarChart3,
+  Package,
   Crown,
   Gem,
-  ChevronLeft,
-  ChevronRight,
-  Instagram,
-  Play,
-  Pause,
+  Lock,
+  Eye,
+  EyeOff,
+  LogOut,
+  ShoppingCart,
+  Clock,
+  CheckCircle,
+  XCircle,
+  QrCode,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
+import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Image from "next/image"
-import Link from "next/link"
 
 interface Product {
   id: string
@@ -30,841 +41,992 @@ interface Product {
   price: number
   image: string
   category: string
-  type: "Joias" | "Semijoias" | "Bijuterias"
   color: string
   occasion: string
   size: string
   material: string
   featured: boolean
   sales: number
+  description?: string
 }
 
-// Mock data - expanded with new categories
-const mockProducts: Product[] = [
-  // Joias
+interface Order {
+  id: string
+  productId: string
+  productName: string
+  price: number
+  timestamp: number
+  status: "pending" | "paid" | "cancelled"
+  pixCode: string
+}
+
+// Hash das credenciais (SHA-256) - NÃO são as credenciais reais!
+// Para gerar: use um gerador SHA-256 online com suas credenciais
+const ADMIN_CREDENTIALS = {
+  // Exemplo: usuário "admin" e senha "onni2024" (MUDE ESTAS!)
+  username: "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918", // hash de "admin"
+  password: "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f", // hash de "secret123"
+}
+
+const SESSION_DURATION = 2 * 60 * 60 * 1000 // 2 horas em milliseconds
+const MAX_LOGIN_ATTEMPTS = 3
+const LOCKOUT_DURATION = 15 * 60 * 1000 // 15 minutos
+
+// Função para gerar hash SHA-256
+async function generateHash(text: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(text)
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
+}
+
+// Componente de Login
+function LoginForm({ onLogin }: { onLogin: () => void }) {
+  const [username, setUsername] = useState("")
+  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [attempts, setAttempts] = useState(0)
+  const [isLocked, setIsLocked] = useState(false)
+  const [lockoutTime, setLockoutTime] = useState<number | null>(null)
+
+  useEffect(() => {
+    // Verificar se há lockout ativo
+    const lockoutEnd = localStorage.getItem("admin_lockout")
+    if (lockoutEnd) {
+      const lockoutEndTime = Number.parseInt(lockoutEnd)
+      if (Date.now() < lockoutEndTime) {
+        setIsLocked(true)
+        setLockoutTime(lockoutEndTime)
+
+        const timer = setInterval(() => {
+          if (Date.now() >= lockoutEndTime) {
+            setIsLocked(false)
+            setLockoutTime(null)
+            localStorage.removeItem("admin_lockout")
+            clearInterval(timer)
+          }
+        }, 1000)
+
+        return () => clearInterval(timer)
+      } else {
+        localStorage.removeItem("admin_lockout")
+      }
+    }
+
+    // Recuperar tentativas de login
+    const savedAttempts = localStorage.getItem("login_attempts")
+    if (savedAttempts) {
+      setAttempts(Number.parseInt(savedAttempts))
+    }
+  }, [])
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (isLocked) {
+      setError("Muitas tentativas falhadas. Tente novamente mais tarde.")
+      return
+    }
+
+    setIsLoading(true)
+    setError("")
+
+    try {
+      const usernameHash = await generateHash(username.toLowerCase().trim())
+      const passwordHash = await generateHash(password)
+
+      if (usernameHash === ADMIN_CREDENTIALS.username && passwordHash === ADMIN_CREDENTIALS.password) {
+        // Login bem-sucedido
+        const sessionData = {
+          authenticated: true,
+          timestamp: Date.now(),
+          expires: Date.now() + SESSION_DURATION,
+        }
+
+        localStorage.setItem("admin_session", JSON.stringify(sessionData))
+        localStorage.removeItem("login_attempts")
+        localStorage.removeItem("admin_lockout")
+
+        onLogin()
+      } else {
+        // Login falhado
+        const newAttempts = attempts + 1
+        setAttempts(newAttempts)
+        localStorage.setItem("login_attempts", newAttempts.toString())
+
+        if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
+          const lockoutEnd = Date.now() + LOCKOUT_DURATION
+          localStorage.setItem("admin_lockout", lockoutEnd.toString())
+          setIsLocked(true)
+          setLockoutTime(lockoutEnd)
+          setError(`Muitas tentativas falhadas. Acesso bloqueado por 15 minutos.`)
+        } else {
+          setError(`Credenciais inválidas. Tentativas restantes: ${MAX_LOGIN_ATTEMPTS - newAttempts}`)
+        }
+      }
+    } catch (error) {
+      setError("Erro interno. Tente novamente.")
+    }
+
+    setIsLoading(false)
+  }
+
+  const getRemainingLockoutTime = () => {
+    if (!lockoutTime) return ""
+    const remaining = Math.ceil((lockoutTime - Date.now()) / 1000 / 60)
+    return `${remaining} minuto${remaining !== 1 ? "s" : ""}`
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-gradient-to-br from-stone-800/40 to-stone-900/40 backdrop-blur-sm border border-stone-700/30">
+        <CardHeader className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-amber-600 to-amber-700 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <Lock className="h-8 w-8 text-white" />
+          </div>
+          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-amber-300 to-amber-400 bg-clip-text text-transparent">
+            Painel Administrativo
+          </CardTitle>
+          <p className="text-stone-400 text-sm">Acessórios Onni</p>
+        </CardHeader>
+
+        <CardContent>
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="username" className="text-stone-200 font-medium">
+                Usuário
+              </Label>
+              <Input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Digite seu usuário"
+                className="bg-stone-700/30 border-stone-600/40 text-stone-100 placeholder-stone-400/60 focus:border-amber-400"
+                disabled={isLocked || isLoading}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-stone-200 font-medium">
+                Senha
+              </Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Digite sua senha"
+                  className="bg-stone-700/30 border-stone-600/40 text-stone-100 placeholder-stone-400/60 focus:border-amber-400 pr-12"
+                  disabled={isLocked || isLoading}
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 text-stone-400 hover:text-stone-200"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={isLocked || isLoading}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+
+            {error && (
+              <Alert className="border-red-500/30 bg-red-500/10">
+                <AlertDescription className="text-red-400 text-sm">
+                  {error}
+                  {isLocked && lockoutTime && (
+                    <div className="mt-2 text-xs">Tempo restante: {getRemainingLockoutTime()}</div>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <Button
+              type="submit"
+              className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-semibold py-3 shadow-lg transition-all duration-300"
+              disabled={isLocked || isLoading}
+            >
+              {isLoading ? "Verificando..." : isLocked ? "Bloqueado" : "Entrar"}
+            </Button>
+          </form>
+
+          <div className="mt-8 p-4 bg-stone-800/30 rounded-lg border border-stone-700/30">
+            <h4 className="text-stone-300 font-medium mb-2 text-sm">🔒 Segurança:</h4>
+            <ul className="text-stone-400 text-xs space-y-1">
+              <li>• Sessão expira em 2 horas</li>
+              <li>• Máximo 3 tentativas de login</li>
+              <li>• Bloqueio de 15min após tentativas falhadas</li>
+              <li>• Credenciais criptografadas</li>
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// Mock data - same as before
+const initialProducts: Product[] = [
   {
     id: "1",
-    name: "Anel Ouro 18k Solitário",
-    price: 1299.9,
-    image: "/placeholder.svg?height=400&width=400&text=Anel+Ouro+18k",
-    category: "Anéis",
-    type: "Joias",
-    color: "Dourado",
-    occasion: "Noivado",
-    size: "Variados",
-    material: "Ouro 18k",
-    featured: true,
-    sales: 45,
-  },
-  {
-    id: "2",
-    name: "Colar Ouro Branco Diamante",
-    price: 2199.9,
-    image: "/placeholder.svg?height=400&width=400&text=Colar+Diamante",
+    name: "Colar Dourado Elegante",
+    price: 89.9,
+    image: "/placeholder.svg?height=400&width=400",
     category: "Colares",
-    type: "Joias",
-    color: "Branco",
-    occasion: "Festa",
-    size: "Médio",
-    material: "Ouro Branco 18k",
-    featured: true,
-    sales: 23,
-  },
-  {
-    id: "3",
-    name: "Brincos Ouro Pérola Natural",
-    price: 899.9,
-    image: "/placeholder.svg?height=400&width=400&text=Brincos+Pérola",
-    category: "Brincos",
-    type: "Joias",
-    color: "Dourado",
-    occasion: "Casamento",
-    size: "Médio",
-    material: "Ouro 18k + Pérola",
-    featured: false,
-    sales: 67,
-  },
-
-  // Semijoias
-  {
-    id: "4",
-    name: "Colar Folheado Cristal",
-    price: 189.9,
-    image: "/placeholder.svg?height=400&width=400&text=Colar+Semijoia",
-    category: "Colares",
-    type: "Semijoias",
     color: "Dourado",
     occasion: "Festa",
     size: "Médio",
     material: "Folheado a Ouro",
     featured: true,
     sales: 156,
+    description: "Colar elegante folheado a ouro, perfeito para ocasiões especiais.",
   },
   {
-    id: "5",
-    name: "Brincos Prata 925 Zircônia",
-    price: 129.9,
-    image: "/placeholder.svg?height=400&width=400&text=Brincos+Prata",
+    id: "2",
+    name: "Brincos Pérola Clássicos",
+    price: 45.9,
+    image: "/placeholder.svg?height=400&width=400",
     category: "Brincos",
-    type: "Semijoias",
-    color: "Prata",
+    color: "Branco",
     occasion: "Casual",
     size: "Pequeno",
-    material: "Prata 925",
+    material: "Pérola Sintética",
     featured: true,
     sales: 203,
-  },
-  {
-    id: "6",
-    name: "Pulseira Folheada Elegante",
-    price: 149.9,
-    image: "/placeholder.svg?height=400&width=400&text=Pulseira+Elegante",
-    category: "Pulseiras",
-    type: "Semijoias",
-    color: "Dourado",
-    occasion: "Festa",
-    size: "Ajustável",
-    material: "Folheado a Ouro",
-    featured: false,
-    sales: 89,
-  },
-
-  // Bijuterias
-  {
-    id: "7",
-    name: "Conjunto Festa Dourado",
-    price: 79.9,
-    image: "/placeholder.svg?height=400&width=400&text=Conjunto+Bijuteria",
-    category: "Conjuntos",
-    type: "Bijuterias",
-    color: "Dourado",
-    occasion: "Festa",
-    size: "Único",
-    material: "Liga Metálica",
-    featured: true,
-    sales: 134,
-  },
-  {
-    id: "8",
-    name: "Choker Minimalista",
-    price: 39.9,
-    image: "/placeholder.svg?height=400&width=400&text=Choker+Minimalista",
-    category: "Colares",
-    type: "Bijuterias",
-    color: "Dourado",
-    occasion: "Casual",
-    size: "Ajustável",
-    material: "Aço Inoxidável",
-    featured: false,
-    sales: 167,
-  },
-  {
-    id: "9",
-    name: "Brincos Cristais Coloridos",
-    price: 49.9,
-    image: "/placeholder.svg?height=400&width=400&text=Brincos+Coloridos",
-    category: "Brincos",
-    type: "Bijuterias",
-    color: "Multicolor",
-    occasion: "Festa",
-    size: "Médio",
-    material: "Cristal Sintético",
-    featured: false,
-    sales: 98,
+    description: "Brincos clássicos de pérola, ideais para o dia a dia.",
   },
 ]
 
-// Carousel Component
-function ProductCarousel({ products, title }: { products: Product[]; title: string }) {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const itemsPerView = 4
+export default function AdminPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [products, setProducts] = useState<Product[]>(initialProducts)
+  const [orders, setOrders] = useState<Order[]>([])
+  const [isAddingProduct, setIsAddingProduct] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [formData, setFormData] = useState<Partial<Product>>({})
 
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + itemsPerView >= products.length ? 0 : prev + itemsPerView))
-  }
+  const categories = ["Colares", "Brincos", "Pulseiras", "Anéis", "Conjuntos"]
+  const colors = ["Dourado", "Prata", "Branco", "Preto", "Multicolor", "Rosa"]
+  const occasions = ["Casual", "Festa", "Trabalho", "Noivado", "Casamento"]
+  const materials = ["Folheado a Ouro", "Prata 925", "Aço Inoxidável", "Pérola Sintética", "Cristal"]
+  const sizes = ["Pequeno", "Médio", "Grande", "Ajustável", "Variados", "Único"]
 
-  const prevSlide = () => {
-    setCurrentIndex((prev) =>
-      prev === 0 ? Math.max(0, products.length - itemsPerView) : Math.max(0, prev - itemsPerView),
-    )
-  }
-
-  const handleWhatsAppClick = (product: Product) => {
-    const message = `Olá! Tenho interesse no produto: ${product.name} - R$ ${product.price.toFixed(2).replace(".", ",")}`
-    const whatsappUrl = `https://wa.me/5581979798540?text=${encodeURIComponent(message)}`
-    window.open(whatsappUrl, "_blank")
-  }
-
-  // Load products from localStorage (shared with admin)
-  const loadProductsFromStorage = () => {
-    const saved = localStorage.getItem("admin_products")
-    if (saved) {
+  useEffect(() => {
+    // Verificar se há sessão válida
+    const sessionData = localStorage.getItem("admin_session")
+    if (sessionData) {
       try {
-        const adminProducts = JSON.parse(saved)
-        return adminProducts
+        const session = JSON.parse(sessionData)
+        if (session.authenticated && Date.now() < session.expires) {
+          setIsAuthenticated(true)
+          loadOrders()
+        } else {
+          localStorage.removeItem("admin_session")
+        }
       } catch (error) {
-        console.error("Error loading products:", error)
+        localStorage.removeItem("admin_session")
       }
     }
-    return mockProducts
+    setIsLoading(false)
+  }, [])
+
+  const loadOrders = () => {
+    const savedOrders = localStorage.getItem("orders")
+    if (savedOrders) {
+      try {
+        setOrders(JSON.parse(savedOrders))
+      } catch (error) {
+        console.error("Error loading orders:", error)
+      }
+    }
   }
 
-  const visibleProducts = products.slice(currentIndex, currentIndex + itemsPerView)
+  const handleLogin = () => {
+    setIsAuthenticated(true)
+    loadOrders()
+  }
 
-  return (
-    <div className="mb-16">
-      <div className="flex items-center justify-between mb-8">
-        <h3 className="text-3xl font-bold text-amber-100">{title}</h3>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={prevSlide}
-            className="border-amber-600/30 text-amber-300 hover:bg-amber-800/20 bg-transparent"
-            disabled={currentIndex === 0}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={nextSlide}
-            className="border-amber-600/30 text-amber-300 hover:bg-amber-800/20 bg-transparent"
-            disabled={currentIndex + itemsPerView >= products.length}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+  const handleLogout = () => {
+    localStorage.removeItem("admin_session")
+    localStorage.removeItem("login_attempts")
+    setIsAuthenticated(false)
+  }
+
+  const handleInputChange = (field: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleSaveProduct = () => {
+    if (editingProduct) {
+      // Update existing product
+      setProducts((prev) => prev.map((p) => (p.id === editingProduct.id ? { ...editingProduct, ...formData } : p)))
+      setEditingProduct(null)
+    } else {
+      // Add new product
+      const newProduct: Product = {
+        id: Date.now().toString(),
+        name: formData.name || "",
+        price: formData.price || 0,
+        image: formData.image || "/placeholder.svg?height=400&width=400",
+        category: formData.category || "",
+        color: formData.color || "",
+        occasion: formData.occasion || "",
+        size: formData.size || "",
+        material: formData.material || "",
+        featured: formData.featured || false,
+        sales: 0,
+        description: formData.description || "",
+      }
+      setProducts((prev) => [...prev, newProduct])
+      setIsAddingProduct(false)
+    }
+    setFormData({})
+
+    // Save to localStorage
+    const updatedProducts = editingProduct
+      ? products.map((p) => (p.id === editingProduct.id ? { ...editingProduct, ...formData } : p))
+      : [
+          ...products,
+          {
+            id: Date.now().toString(),
+            name: formData.name || "",
+            price: formData.price || 0,
+            image: formData.image || "/placeholder.svg?height=400&width=400",
+            category: formData.category || "",
+            color: formData.color || "",
+            occasion: formData.occasion || "",
+            size: formData.size || "",
+            material: formData.material || "",
+            featured: formData.featured || false,
+            sales: 0,
+            description: formData.description || "",
+          },
+        ]
+
+    localStorage.setItem("admin_products", JSON.stringify(updatedProducts))
+  }
+
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product)
+    setFormData(product)
+  }
+
+  const handleDeleteProduct = (id: string) => {
+    const updatedProducts = products.filter((p) => p.id !== id)
+    setProducts(updatedProducts)
+    localStorage.setItem("admin_products", JSON.stringify(updatedProducts))
+  }
+
+  const updateOrderStatus = (orderId: string, status: "pending" | "paid" | "cancelled") => {
+    const updatedOrders = orders.map((order) => (order.id === orderId ? { ...order, status } : order))
+    setOrders(updatedOrders)
+    localStorage.setItem("orders", JSON.stringify(updatedOrders))
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "paid":
+        return "bg-green-500/20 text-green-400 border-green-500/30"
+      case "cancelled":
+        return "bg-red-500/20 text-red-400 border-red-500/30"
+      default:
+        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+    }
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "paid":
+        return <CheckCircle className="h-4 w-4" />
+      case "cancelled":
+        return <XCircle className="h-4 w-4" />
+      default:
+        return <Clock className="h-4 w-4" />
+    }
+  }
+
+  const totalRevenue = products.reduce((sum, p) => sum + p.price * p.sales, 0)
+  const totalOrders = orders.length
+  const paidOrders = orders.filter((o) => o.status === "paid").length
+  const pendingOrders = orders.filter((o) => o.status === "pending").length
+
+  const ProductForm = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="name" className="text-stone-200 font-medium">
+            Nome do Produto
+          </Label>
+          <Input
+            id="name"
+            value={formData.name || ""}
+            onChange={(e) => handleInputChange("name", e.target.value)}
+            placeholder="Nome do produto"
+            className="bg-stone-700/30 border-stone-600/40 text-stone-100 placeholder-stone-400/60 focus:border-amber-400"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="price" className="text-stone-200 font-medium">
+            Preço (R$)
+          </Label>
+          <Input
+            id="price"
+            type="number"
+            step="0.01"
+            value={formData.price || ""}
+            onChange={(e) => handleInputChange("price", Number.parseFloat(e.target.value))}
+            placeholder="0.00"
+            className="bg-stone-700/30 border-stone-600/40 text-stone-100 placeholder-stone-400/60 focus:border-amber-400"
+          />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {visibleProducts.map((product) => (
-          <Card
-            key={product.id}
-            className="group bg-gradient-to-br from-stone-800/20 to-amber-900/20 backdrop-blur-sm border border-stone-700/30 hover:border-amber-600/50 transition-all duration-500 hover:shadow-2xl hover:shadow-amber-500/10 transform hover:scale-105"
-          >
-            <CardContent className="p-6">
-              <div className="relative mb-6 overflow-hidden rounded-xl">
-                <Image
-                  src={product.image || "/placeholder.svg"}
-                  alt={product.name}
-                  width={400}
-                  height={400}
-                  className="w-full h-52 object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-stone-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      <div className="space-y-2">
+        <Label htmlFor="description" className="text-stone-200 font-medium">
+          Descrição
+        </Label>
+        <Textarea
+          id="description"
+          value={formData.description || ""}
+          onChange={(e) => handleInputChange("description", e.target.value)}
+          placeholder="Descrição detalhada do produto"
+          rows={4}
+          className="bg-stone-700/30 border-stone-600/40 text-stone-100 placeholder-stone-400/60 focus:border-amber-400"
+        />
+      </div>
 
-                {product.featured && (
-                  <Badge className="absolute top-3 left-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white border-0">
-                    <Crown className="h-3 w-3 mr-1" />
-                    Destaque
-                  </Badge>
-                )}
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="category" className="text-stone-200 font-medium">
+            Categoria
+          </Label>
+          <Select value={formData.category || ""} onValueChange={(value) => handleInputChange("category", value)}>
+            <SelectTrigger className="bg-stone-700/30 border-stone-600/40 text-stone-100">
+              <SelectValue placeholder="Selecione a categoria" />
+            </SelectTrigger>
+            <SelectContent className="bg-stone-800 border-stone-700">
+              {categories.map((category) => (
+                <SelectItem key={category} value={category} className="text-stone-100 focus:bg-stone-700">
+                  {category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-              <h4 className="font-bold text-stone-100 mb-3 leading-tight">{product.name}</h4>
+        <div className="space-y-2">
+          <Label htmlFor="color" className="text-stone-200 font-medium">
+            Cor
+          </Label>
+          <Select value={formData.color || ""} onValueChange={(value) => handleInputChange("color", value)}>
+            <SelectTrigger className="bg-stone-700/30 border-stone-600/40 text-stone-100">
+              <SelectValue placeholder="Selecione a cor" />
+            </SelectTrigger>
+            <SelectContent className="bg-stone-800 border-stone-700">
+              {colors.map((color) => (
+                <SelectItem key={color} value={color} className="text-stone-100 focus:bg-stone-700">
+                  {color}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-              <p className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent mb-4">
-                R$ {product.price.toFixed(2).replace(".", ",")}
-              </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="occasion" className="text-stone-200 font-medium">
+            Ocasião
+          </Label>
+          <Select value={formData.occasion || ""} onValueChange={(value) => handleInputChange("occasion", value)}>
+            <SelectTrigger className="bg-stone-700/30 border-stone-600/40 text-stone-100">
+              <SelectValue placeholder="Selecione a ocasião" />
+            </SelectTrigger>
+            <SelectContent className="bg-stone-800 border-stone-700">
+              {occasions.map((occasion) => (
+                <SelectItem key={occasion} value={occasion} className="text-stone-100 focus:bg-stone-700">
+                  {occasion}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-              <div className="flex flex-wrap gap-2 mb-4">
-                <Badge variant="secondary" className="bg-stone-700/30 text-amber-300 border-stone-600/30 text-xs">
-                  {product.material}
-                </Badge>
-                <Badge variant="secondary" className="bg-stone-700/30 text-amber-300 border-stone-600/30 text-xs">
-                  {product.size}
-                </Badge>
-              </div>
+        <div className="space-y-2">
+          <Label htmlFor="size" className="text-stone-200 font-medium">
+            Tamanho
+          </Label>
+          <Select value={formData.size || ""} onValueChange={(value) => handleInputChange("size", value)}>
+            <SelectTrigger className="bg-stone-700/30 border-stone-600/40 text-stone-100">
+              <SelectValue placeholder="Selecione o tamanho" />
+            </SelectTrigger>
+            <SelectContent className="bg-stone-800 border-stone-700">
+              {sizes.map((size) => (
+                <SelectItem key={size} value={size} className="text-stone-100 focus:bg-stone-700">
+                  {size}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-              <Button
-                onClick={() => handleWhatsAppClick(product)}
-                className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 shadow-lg hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-105"
-              >
-                <MessageCircle className="h-4 w-4 mr-2" />
-                Desejo Comprar
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="space-y-2">
+        <Label htmlFor="material" className="text-stone-200 font-medium">
+          Material
+        </Label>
+        <Select value={formData.material || ""} onValueChange={(value) => handleInputChange("material", value)}>
+          <SelectTrigger className="bg-stone-700/30 border-stone-600/40 text-stone-100">
+            <SelectValue placeholder="Selecione o material" />
+          </SelectTrigger>
+          <SelectContent className="bg-stone-800 border-stone-700">
+            {materials.map((material) => (
+              <SelectItem key={material} value={material} className="text-stone-100 focus:bg-stone-700">
+                {material}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="image" className="text-stone-200 font-medium">
+          URL da Imagem
+        </Label>
+        <Input
+          id="image"
+          value={formData.image || ""}
+          onChange={(e) => handleInputChange("image", e.target.value)}
+          placeholder="URL da imagem do produto"
+          className="bg-stone-700/30 border-stone-600/40 text-stone-100 placeholder-stone-400/60 focus:border-amber-400"
+        />
+      </div>
+
+      <div className="flex items-center space-x-3 p-4 bg-stone-800/30 rounded-xl border border-stone-700/30">
+        <Switch
+          id="featured"
+          checked={formData.featured || false}
+          onCheckedChange={(checked) => handleInputChange("featured", checked)}
+          className="data-[state=checked]:bg-amber-500"
+        />
+        <Label htmlFor="featured" className="text-stone-200 font-medium flex items-center">
+          <Crown className="h-4 w-4 mr-2 text-amber-400" />
+          Produto em Destaque
+        </Label>
+      </div>
+
+      <div className="flex gap-4 pt-4">
+        <Button
+          onClick={handleSaveProduct}
+          className="bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 flex-1"
+        >
+          <Save className="h-4 w-4 mr-2" />
+          Salvar Produto
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => {
+            setIsAddingProduct(false)
+            setEditingProduct(null)
+            setFormData({})
+          }}
+          className="border-stone-600/30 text-stone-300 hover:bg-stone-800/30"
+        >
+          <X className="h-4 w-4 mr-2" />
+          Cancelar
+        </Button>
       </div>
     </div>
   )
-}
 
-export default function HomePage() {
-  const [products, setProducts] = useState<Product[]>(mockProducts)
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>(mockProducts)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
-  const [selectedType, setSelectedType] = useState("all")
-  const [selectedColor, setSelectedColor] = useState("all")
-  const [selectedOccasion, setSelectedOccasion] = useState("all")
-  const [isVideoPlaying, setIsVideoPlaying] = useState(true)
-
-  const categories = ["all", ...Array.from(new Set(products.map((p) => p.category)))]
-  const types = ["all", ...Array.from(new Set(products.map((p) => p.type)))]
-  const colors = ["all", ...Array.from(new Set(products.map((p) => p.color)))]
-  const occasions = ["all", ...Array.from(new Set(products.map((p) => p.occasion)))]
-
-  const featuredProducts = products.filter((p) => p.featured).sort((a, b) => b.sales - a.sales)
-  const joias = products.filter((p) => p.type === "Joias")
-  const semijoias = products.filter((p) => p.type === "Semijoias")
-  const bijuterias = products.filter((p) => p.type === "Bijuterias")
-
-  const loadProductsFromStorage = () => {
-    const saved = localStorage.getItem("admin_products")
-    if (saved) {
-      try {
-        const adminProducts = JSON.parse(saved)
-        return adminProducts
-      } catch (error) {
-        console.error("Error loading products:", error)
-      }
-    }
-    return mockProducts
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-amber-600 to-amber-700 rounded-xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <Crown className="h-8 w-8 text-white" />
+          </div>
+          <p className="text-stone-400">Carregando...</p>
+        </div>
+      </div>
+    )
   }
 
-  useEffect(() => {
-    // Load products from localStorage on component mount
-    const loadedProducts = loadProductsFromStorage()
-    setProducts(loadedProducts)
-  }, [])
-
-  const handleWhatsAppClick = (product: Product) => {
-    const message = `Olá! Tenho interesse no produto: ${product.name} - R$ ${product.price.toFixed(2).replace(".", ",")}`
-    const whatsappUrl = `https://wa.me/5581979798540?text=${encodeURIComponent(message)}`
-    window.open(whatsappUrl, "_blank")
+  if (!isAuthenticated) {
+    return <LoginForm onLogin={handleLogin} />
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-900 via-stone-800 to-amber-900">
+    <div className="min-h-screen bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900">
       {/* Header */}
       <header className="bg-gradient-to-r from-stone-900/95 to-stone-800/95 backdrop-blur-md border-b border-stone-700/30 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Image
-                src="/images/logo.png"
-                alt="Acessórios Onni"
-                width={140}
-                height={70}
-                className="h-14 w-auto brightness-110 contrast-125"
-              />
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-amber-600 to-amber-700 rounded-xl flex items-center justify-center">
+                  <Crown className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-300 to-amber-400 bg-clip-text text-transparent">
+                    Painel Administrativo
+                  </h1>
+                  <p className="text-stone-400 text-sm">Acessórios Onni</p>
+                </div>
+              </div>
             </div>
-            <nav className="hidden md:flex items-center space-x-8">
-              <Link
-                href="/"
-                className="text-amber-200 hover:text-amber-300 font-medium transition-colors duration-300 relative group"
-              >
-                Início
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-amber-400 transition-all duration-300 group-hover:w-full"></span>
-              </Link>
-              <Link
-                href="/products"
-                className="text-amber-200 hover:text-amber-300 font-medium transition-colors duration-300 relative group"
-              >
-                Produtos
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-amber-400 transition-all duration-300 group-hover:w-full"></span>
-              </Link>
-              <Link
-                href="/about"
-                className="text-amber-200 hover:text-amber-300 font-medium transition-colors duration-300 relative group"
-              >
-                Sobre
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-amber-400 transition-all duration-300 group-hover:w-full"></span>
-              </Link>
-              <Link
-                href="/contact"
-                className="text-amber-200 hover:text-amber-300 font-medium transition-colors duration-300 relative group"
-              >
-                Contato
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-amber-400 transition-all duration-300 group-hover:w-full"></span>
-              </Link>
-            </nav>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4">
               <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => window.open("https://www.instagram.com/onniacessorios/", "_blank")}
-                className="text-amber-200 hover:text-amber-300 hover:bg-stone-800/50 transition-all duration-300"
+                onClick={() => setIsAddingProduct(true)}
+                className="bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 shadow-lg"
               >
-                <Instagram className="h-5 w-5" />
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Produto
               </Button>
               <Button
-                variant="ghost"
-                size="icon"
-                className="text-amber-200 hover:text-amber-300 hover:bg-stone-800/50 transition-all duration-300"
+                variant="outline"
+                onClick={handleLogout}
+                className="border-stone-600/30 text-stone-300 hover:bg-stone-800/30 bg-transparent"
               >
-                <Heart className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-amber-200 hover:text-amber-300 hover:bg-stone-800/50 transition-all duration-300"
-              >
-                <ShoppingBag className="h-5 w-5" />
+                <LogOut className="h-4 w-4 mr-2" />
+                Sair
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative py-24 overflow-hidden bg-gradient-to-br from-amber-800 via-amber-700 to-stone-700">
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-900/20 to-stone-800/20"></div>
-        <div className="absolute inset-0">
-          <div className="absolute top-20 left-10 w-32 h-32 bg-amber-400/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-10 w-48 h-48 bg-stone-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-amber-300/5 rounded-full blur-3xl animate-pulse delay-500"></div>
-        </div>
-
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="flex items-center justify-center mb-6">
-            <Sparkles className="h-8 w-8 text-amber-300 mr-3 animate-pulse" />
-            <Crown className="h-10 w-10 text-amber-400" />
-            <Sparkles className="h-8 w-8 text-amber-300 ml-3 animate-pulse" />
-          </div>
-
-          <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-amber-200 via-amber-100 to-stone-200 bg-clip-text text-transparent mb-6 leading-tight">
-            Acessórios Onni
-          </h1>
-
-          <p className="text-xl md:text-2xl text-amber-200/90 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Semijoias que refletem uma elegância atemporal
-            <span className="block mt-2 text-amber-300/80">e enaltecem cada detalhe com sofisticação</span>
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button
-              size="lg"
-              className="bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white px-10 py-4 text-lg font-semibold shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 transform hover:scale-105"
-            >
-              <Gem className="h-5 w-5 mr-2" />
-              Ver Coleção Exclusiva
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => window.open("https://www.instagram.com/onniacessorios/", "_blank")}
-              className="border-2 border-amber-300/50 text-amber-200 hover:bg-amber-300/10 px-10 py-4 text-lg backdrop-blur-sm transition-all duration-300 bg-transparent"
-            >
-              <Instagram className="h-5 w-5 mr-2" />
-              Siga no Instagram
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Instagram Section */}
-      <section className="py-16 bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900">
-        <div className="container mx-auto px-4 text-center">
-          <div className="max-w-2xl mx-auto">
-            <div className="flex items-center justify-center mb-6">
-              <Instagram className="h-8 w-8 text-pink-400 mr-3" />
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-400 to-amber-400 bg-clip-text text-transparent">
-                Siga-nos no Instagram
-              </h2>
-              <Instagram className="h-8 w-8 text-pink-400 ml-3" />
-            </div>
-            <p className="text-stone-300 text-lg mb-8">
-              Acompanhe nossas novidades, tendências e inspirações diárias no @onniacessorios
-            </p>
-            <Button
-              size="lg"
-              onClick={() => window.open("https://www.instagram.com/onniacessorios/", "_blank")}
-              className="bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-700 hover:to-pink-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-105"
-            >
-              <Instagram className="h-5 w-5 mr-2" />
-              @onniacessorios
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Video Section */}
-      <section className="relative py-20 overflow-hidden bg-gradient-to-br from-stone-900 via-amber-900 to-stone-800">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-amber-200 to-stone-200 bg-clip-text text-transparent mb-4">
-              Nossa Coleção em Destaque
-            </h2>
-            <p className="text-stone-300 text-lg">Veja de perto a qualidade e elegância de nossos acessórios</p>
-          </div>
-
-          <div className="max-w-4xl mx-auto relative">
-            <div className="relative overflow-hidden rounded-2xl shadow-2xl">
-              <video
-                className="w-full h-[400px] md:h-[500px] object-cover"
-                autoPlay
-                loop
-                muted
-                playsInline
-                onPlay={() => setIsVideoPlaying(true)}
-                onPause={() => setIsVideoPlaying(false)}
-                id="hero-video"
-              >
-                <source src="/videos/hero-video.mp4" type="video/mp4" />
-                Seu navegador não suporta vídeo HTML5.
-              </video>
-
-              {/* Video Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-stone-900/60 via-transparent to-stone-900/30"></div>
-
-              {/* Video Controls */}
-              <div className="absolute inset-0 flex items-center justify-center gap-6">
-                <Button
-                  size="lg"
-                  onClick={() => {
-                    const video = document.getElementById("hero-video") as HTMLVideoElement
-                    if (video.paused) {
-                      video.play()
-                    } else {
-                      video.pause()
-                    }
-                  }}
-                  className="bg-gradient-to-r from-amber-600/90 to-amber-700/90 hover:from-amber-700/90 hover:to-amber-800/90 text-white px-8 py-4 text-lg font-semibold shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 transform hover:scale-105 backdrop-blur-sm"
-                >
-                  {isVideoPlaying ? (
-                    <>
-                      <Pause className="h-6 w-6 mr-2" />
-                      Pausar
-                    </>
-                  ) : (
-                    <>
-                      <Play className="h-6 w-6 mr-2" />
-                      Reproduzir
-                    </>
-                  )}
-                </Button>
-
-                <Button
-                  size="lg"
-                  onClick={() =>
-                    window.open(
-                      "https://wa.me/5581979798540?text=Olá! Gostaria de conhecer mais sobre a coleção!",
-                      "_blank",
-                    )
-                  }
-                  className="bg-gradient-to-r from-green-600/90 to-green-700/90 hover:from-green-700/90 hover:to-green-800/90 text-white px-8 py-4 text-lg font-semibold shadow-2xl hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-105 backdrop-blur-sm"
-                >
-                  <MessageCircle className="h-6 w-6 mr-2" />
-                  Fale Conosco
-                </Button>
+      <div className="container mx-auto px-4 py-8">
+        {/* Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-gradient-to-br from-stone-800/40 to-stone-900/40 backdrop-blur-sm border border-stone-700/30">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-stone-300">Total de Produtos</CardTitle>
+                <Package className="h-5 w-5 text-amber-400" />
               </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-stone-100">{products.length}</div>
+              <p className="text-stone-400 text-xs mt-1">produtos cadastrados</p>
+            </CardContent>
+          </Card>
 
-              {/* Video Corner Badge */}
-              <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-600/90 to-amber-700/90 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm font-semibold">
-                <Sparkles className="h-4 w-4 inline mr-2" />
-                Coleção 2024
+          <Card className="bg-gradient-to-br from-stone-800/40 to-stone-900/40 backdrop-blur-sm border border-stone-700/30">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-stone-300">Total de Pedidos</CardTitle>
+                <ShoppingCart className="h-5 w-5 text-amber-400" />
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-stone-100">{totalOrders}</div>
+              <p className="text-stone-400 text-xs mt-1">pedidos realizados</p>
+            </CardContent>
+          </Card>
 
-      {/* Product Categories Carousels */}
-      <section className="py-20 bg-gradient-to-br from-amber-900/80 via-stone-800/80 to-amber-800/80">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-amber-200 to-stone-200 bg-clip-text text-transparent mb-4">
-              Nossas Coleções
-            </h2>
-            <p className="text-amber-300/80 text-lg">Descubra a categoria perfeita para cada ocasião</p>
-          </div>
-
-          <ProductCarousel products={joias} title="💎 Joias" />
-          <ProductCarousel products={semijoias} title="✨ Semijoias" />
-          <ProductCarousel products={bijuterias} title="🌟 Bijuterias" />
-        </div>
-      </section>
-
-      {/* Filters and Products */}
-      <section className="py-20 bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-amber-300 to-stone-300 bg-clip-text text-transparent mb-4">
-              Coleção Completa
-            </h2>
-            <p className="text-stone-300 text-lg">Encontre a peça perfeita que combina com seu estilo único</p>
-          </div>
-
-          {/* Search and Filters */}
-          <div className="mb-12">
-            <div className="bg-gradient-to-r from-stone-800/40 to-stone-700/40 backdrop-blur-sm rounded-2xl p-6 border border-stone-600/30">
-              <div className="flex flex-col lg:flex-row gap-4">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-amber-400" />
-                  <Input
-                    type="text"
-                    placeholder="Buscar produtos..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 bg-stone-700/30 border-stone-600/40 text-stone-100 placeholder-stone-400/60 focus:border-amber-400 focus:ring-amber-400/20 h-12"
-                  />
-                </div>
-
-                <div className="flex flex-wrap gap-3">
-                  <Select value={selectedType} onValueChange={setSelectedType}>
-                    <SelectTrigger className="w-36 bg-stone-700/30 border-stone-600/40 text-stone-100 h-12">
-                      <Filter className="h-4 w-4 mr-2 text-amber-400" />
-                      <SelectValue placeholder="Tipo" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-stone-800 border-stone-700">
-                      {types.map((type) => (
-                        <SelectItem key={type} value={type} className="text-stone-100 focus:bg-stone-700">
-                          {type === "all" ? "Todos os Tipos" : type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger className="w-40 bg-stone-700/30 border-stone-600/40 text-stone-100 h-12">
-                      <SelectValue placeholder="Categoria" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-stone-800 border-stone-700">
-                      {categories.map((category) => (
-                        <SelectItem key={category} value={category} className="text-stone-100 focus:bg-stone-700">
-                          {category === "all" ? "Todas Categorias" : category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={selectedColor} onValueChange={setSelectedColor}>
-                    <SelectTrigger className="w-32 bg-stone-700/30 border-stone-600/40 text-stone-100 h-12">
-                      <SelectValue placeholder="Cor" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-stone-800 border-stone-700">
-                      {colors.map((color) => (
-                        <SelectItem key={color} value={color} className="text-stone-100 focus:bg-stone-700">
-                          {color === "all" ? "Todas Cores" : color}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Select value={selectedOccasion} onValueChange={setSelectedOccasion}>
-                    <SelectTrigger className="w-36 bg-stone-700/30 border-stone-600/40 text-stone-100 h-12">
-                      <SelectValue placeholder="Ocasião" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-stone-800 border-stone-700">
-                      {occasions.map((occasion) => (
-                        <SelectItem key={occasion} value={occasion} className="text-stone-100 focus:bg-stone-700">
-                          {occasion === "all" ? "Todas Ocasiões" : occasion}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+          <Card className="bg-gradient-to-br from-stone-800/40 to-stone-900/40 backdrop-blur-sm border border-stone-700/30">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-stone-300">Pedidos Pendentes</CardTitle>
+                <Clock className="h-5 w-5 text-amber-400" />
               </div>
-            </div>
-          </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-stone-100">{pendingOrders}</div>
+              <p className="text-stone-400 text-xs mt-1">aguardando pagamento</p>
+            </CardContent>
+          </Card>
 
-          {/* Products Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {filteredProducts.map((product) => (
-              <Card
-                key={product.id}
-                className="group bg-gradient-to-br from-stone-800/20 to-stone-700/20 backdrop-blur-sm border border-stone-600/30 hover:border-amber-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-amber-500/10 transform hover:scale-105"
-              >
-                <CardContent className="p-6">
-                  <div className="relative mb-6 overflow-hidden rounded-xl">
-                    <Image
-                      src={product.image || "/placeholder.svg"}
-                      alt={product.name}
-                      width={400}
-                      height={400}
-                      className="w-full h-52 object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-stone-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <Card className="bg-gradient-to-br from-stone-800/40 to-stone-900/40 backdrop-blur-sm border border-stone-700/30">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-medium text-stone-300">Receita Total</CardTitle>
+                <BarChart3 className="h-5 w-5 text-amber-400" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
+                R$ {totalRevenue.toFixed(2).replace(".", ",")}
+              </div>
+              <p className="text-stone-400 text-xs mt-1">receita estimada</p>
+            </CardContent>
+          </Card>
+        </div>
 
-                    {product.featured && (
-                      <Badge className="absolute top-3 left-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white border-0">
-                        <Crown className="h-3 w-3 mr-1" />
-                        Destaque
-                      </Badge>
-                    )}
+        {/* Tabs */}
+        <Tabs defaultValue="products" className="space-y-6">
+          <TabsList className="bg-stone-800/40 border border-stone-700/30">
+            <TabsTrigger
+              value="products"
+              className="data-[state=active]:bg-amber-600/20 data-[state=active]:text-amber-300"
+            >
+              <Package className="h-4 w-4 mr-2" />
+              Produtos
+            </TabsTrigger>
+            <TabsTrigger
+              value="orders"
+              className="data-[state=active]:bg-amber-600/20 data-[state=active]:text-amber-300"
+            >
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              Pedidos
+            </TabsTrigger>
+          </TabsList>
 
-                    <Badge className="absolute top-3 right-3 bg-stone-900/80 backdrop-blur-sm text-amber-200 border-0 text-xs">
-                      {product.type}
-                    </Badge>
+          <TabsContent value="products" className="space-y-6">
+            {/* Add Product Form */}
+            {isAddingProduct && (
+              <Card className="bg-gradient-to-br from-stone-800/40 to-stone-900/40 backdrop-blur-sm border border-stone-700/30">
+                <CardHeader>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-amber-600 to-amber-700 rounded-lg flex items-center justify-center">
+                      <Plus className="h-5 w-5 text-white" />
+                    </div>
+                    <CardTitle className="text-stone-200">Adicionar Novo Produto</CardTitle>
                   </div>
-
-                  <h3 className="font-bold text-stone-100 mb-3 leading-tight">{product.name}</h3>
-
-                  <p className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent mb-4">
-                    R$ {product.price.toFixed(2).replace(".", ",")}
-                  </p>
-
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <Badge variant="secondary" className="bg-stone-700/30 text-amber-300 border-stone-600/30 text-xs">
-                      {product.material}
-                    </Badge>
-                    <Badge variant="secondary" className="bg-stone-700/30 text-amber-300 border-stone-600/30 text-xs">
-                      {product.size}
-                    </Badge>
-                  </div>
-
-                  <Button
-                    onClick={() => handleWhatsAppClick(product)}
-                    className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 shadow-lg hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-105"
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Desejo Comprar
-                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <ProductForm />
                 </CardContent>
               </Card>
-            ))}
-          </div>
+            )}
 
-          {filteredProducts.length === 0 && (
-            <div className="text-center py-16">
-              <div className="bg-gradient-to-br from-stone-800/30 to-stone-700/30 backdrop-blur-sm rounded-2xl p-12 border border-stone-600/40 max-w-md mx-auto">
-                <Search className="h-16 w-16 text-amber-400/50 mx-auto mb-4" />
-                <p className="text-stone-300 text-lg font-medium">Nenhum produto encontrado</p>
-                <p className="text-stone-400 text-sm mt-2">Tente ajustar os filtros de busca</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* PIX Payment Section */}
-      <section className="py-20 relative overflow-hidden bg-gradient-to-br from-amber-800 via-amber-700 to-stone-700">
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-900/30 to-stone-800/30"></div>
-        <div className="absolute inset-0">
-          <div className="absolute top-10 left-20 w-40 h-40 bg-amber-400/5 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-10 right-20 w-56 h-56 bg-stone-400/5 rounded-full blur-3xl"></div>
-        </div>
-
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-amber-200 to-stone-200 bg-clip-text text-transparent mb-6">
-              Pagamento Instantâneo
-            </h2>
-            <p className="text-amber-300/80 text-lg mb-12 max-w-2xl mx-auto">
-              Pague com PIX e receba seu produto mais rapidamente! Processo seguro e instantâneo.
-            </p>
-
-            <div className="bg-gradient-to-br from-stone-800/30 to-amber-800/30 backdrop-blur-sm p-10 rounded-3xl border border-stone-700/30 max-w-lg mx-auto shadow-2xl">
-              <div className="w-64 h-64 bg-gradient-to-br from-stone-700/30 to-amber-700/30 mx-auto mb-6 rounded-2xl flex items-center justify-center border border-stone-600/30">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-amber-400/20 rounded-xl mx-auto mb-4 flex items-center justify-center">
-                    <Gem className="h-8 w-8 text-amber-400" />
+            {/* Edit Product Form */}
+            {editingProduct && (
+              <Card className="bg-gradient-to-br from-stone-800/40 to-stone-900/40 backdrop-blur-sm border border-stone-700/30">
+                <CardHeader>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-amber-600 to-amber-700 rounded-lg flex items-center justify-center">
+                      <Edit className="h-5 w-5 text-white" />
+                    </div>
+                    <CardTitle className="text-stone-200">Editar Produto</CardTitle>
                   </div>
-                  <p className="text-amber-300/70 text-sm leading-relaxed">
-                    QR Code PIX
-                    <br />
-                    <span className="text-xs text-amber-400/60">Será gerado após seleção do produto</span>
-                  </p>
-                </div>
-              </div>
-              <p className="text-amber-300/80 text-sm leading-relaxed">
-                Escaneie o código QR com seu app do banco para pagar via PIX de forma segura e instantânea
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+                </CardHeader>
+                <CardContent>
+                  <ProductForm />
+                </CardContent>
+              </Card>
+            )}
 
-      {/* Footer */}
-      <footer className="bg-gradient-to-b from-stone-900 to-stone-800 border-t border-stone-700/30">
-        <div className="container mx-auto px-4 py-16">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="space-y-6">
-              <Image
-                src="/images/logo.png"
-                alt="Acessórios Onni"
-                width={160}
-                height={80}
-                className="h-16 w-auto brightness-110"
-              />
-              <p className="text-stone-300 leading-relaxed max-w-sm">
-                Acessórios exclusivos para mulheres que valorizam elegância, qualidade e sofisticação em cada detalhe.
-              </p>
-              <div className="flex space-x-4">
-                <div
-                  onClick={() => window.open("https://www.instagram.com/onniacessorios/", "_blank")}
-                  className="w-10 h-10 bg-pink-600/20 rounded-full flex items-center justify-center hover:bg-pink-600/40 transition-colors cursor-pointer"
-                >
-                  <Instagram className="h-5 w-5 text-pink-400" />
-                </div>
-                <div className="w-10 h-10 bg-green-600/20 rounded-full flex items-center justify-center hover:bg-green-600/40 transition-colors cursor-pointer">
-                  <MessageCircle className="h-5 w-5 text-green-400" />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <h3 className="font-bold text-amber-200 text-lg">Contato Direto</h3>
-              <div className="space-y-4">
+            {/* Products List */}
+            <Card className="bg-gradient-to-br from-stone-800/40 to-stone-900/40 backdrop-blur-sm border border-stone-700/30">
+              <CardHeader>
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-green-600/20 rounded-lg flex items-center justify-center">
-                    <MessageCircle className="h-4 w-4 text-green-400" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-amber-600 to-amber-700 rounded-lg flex items-center justify-center">
+                    <Gem className="h-5 w-5 text-white" />
                   </div>
-                  <div>
-                    <p className="text-amber-300 font-medium">WhatsApp</p>
-                    <p className="text-stone-400 text-sm">+55 81 9797-9854</p>
-                  </div>
+                  <CardTitle className="text-stone-200">Produtos Cadastrados</CardTitle>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-amber-600/20 rounded-lg flex items-center justify-center">
-                    <span className="text-amber-400 text-xs font-bold">@</span>
-                  </div>
-                  <div>
-                    <p className="text-amber-300 font-medium">Email</p>
-                    <p className="text-stone-400 text-sm">contato@acessoriosonni.com</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div
-                    onClick={() => window.open("https://www.instagram.com/onniacessorios/", "_blank")}
-                    className="w-8 h-8 bg-pink-600/20 rounded-lg flex items-center justify-center cursor-pointer hover:bg-pink-600/40 transition-colors"
-                  >
-                    <Instagram className="h-4 w-4 text-pink-400" />
-                  </div>
-                  <div>
-                    <p className="text-amber-300 font-medium">Instagram</p>
-                    <p className="text-stone-400 text-sm">@onniacessorios</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {products.map((product) => (
+                    <Card
+                      key={product.id}
+                      className="bg-gradient-to-br from-stone-700/20 to-stone-800/20 border border-stone-600/30 hover:border-amber-500/40 transition-all duration-300"
+                    >
+                      <CardContent className="p-5">
+                        <div className="relative mb-4 overflow-hidden rounded-lg">
+                          <Image
+                            src={product.image || "/placeholder.svg"}
+                            alt={product.name}
+                            width={400}
+                            height={250}
+                            className="w-full h-40 object-cover"
+                          />
+                          {product.featured && (
+                            <Badge className="absolute top-2 left-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white border-0">
+                              <Crown className="h-3 w-3 mr-1" />
+                              Destaque
+                            </Badge>
+                          )}
+                        </div>
 
-            <div className="space-y-6">
-              <h3 className="font-bold text-amber-200 text-lg">Informações</h3>
-              <ul className="space-y-3">
-                {[
-                  "Política de Privacidade",
-                  "Termos de Uso",
-                  "Trocas e Devoluções",
-                  "Frete e Entrega",
-                  "Garantia de Qualidade",
-                ].map((item) => (
-                  <li key={item}>
-                    <a href="#" className="text-stone-300 hover:text-amber-200 transition-colors duration-300 text-sm">
-                      {item}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+                        <h3 className="font-bold text-stone-100 mb-2 leading-tight">{product.name}</h3>
+                        <p className="text-xl font-bold bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent mb-3">
+                          R$ {product.price.toFixed(2).replace(".", ",")}
+                        </p>
 
-          <div className="border-t border-stone-700/30 mt-12 pt-8">
-            <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-              <p className="text-stone-400 text-sm">&copy; 2024 Acessórios Onni. Todos os direitos reservados.</p>
-              <div className="flex items-center space-x-4 text-stone-400 text-sm">
-                <span>Desenvolvido com</span>
-                <Heart className="h-4 w-4 text-red-400 fill-current" />
-                <span>para você</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          <Badge
+                            variant="secondary"
+                            className="bg-stone-700/30 text-amber-300 border-stone-600/30 text-xs"
+                          >
+                            {product.category}
+                          </Badge>
+                          <Badge
+                            variant="secondary"
+                            className="bg-stone-700/30 text-amber-300 border-stone-600/30 text-xs"
+                          >
+                            {product.color}
+                          </Badge>
+                          <Badge
+                            variant="secondary"
+                            className="bg-stone-700/30 text-amber-300 border-stone-600/30 text-xs"
+                          >
+                            {product.material}
+                          </Badge>
+                        </div>
+
+                        <div className="flex items-center justify-between text-sm text-stone-400 mb-4">
+                          <span>Vendas: {product.sales}</span>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditProduct(product)}
+                            className="flex-1 border-stone-600/30 text-stone-300 hover:bg-stone-800/30"
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            Editar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeleteProduct(product.id)}
+                            className="bg-red-600/20 border-red-500/30 text-red-400 hover:bg-red-600/30"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {products.length === 0 && (
+                  <div className="text-center py-16">
+                    <div className="bg-gradient-to-br from-stone-800/30 to-stone-900/30 backdrop-blur-sm rounded-2xl p-12 border border-stone-700/30 max-w-md mx-auto">
+                      <Package className="h-16 w-16 text-stone-400/50 mx-auto mb-4" />
+                      <p className="text-stone-300 text-lg font-medium mb-2">Nenhum produto cadastrado</p>
+                      <p className="text-stone-400 text-sm mb-6">Comece adicionando seu primeiro produto</p>
+                      <Button
+                        onClick={() => setIsAddingProduct(true)}
+                        className="bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Adicionar Primeiro Produto
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="orders" className="space-y-6">
+            {/* Orders List */}
+            <Card className="bg-gradient-to-br from-stone-800/40 to-stone-900/40 backdrop-blur-sm border border-stone-700/30">
+              <CardHeader>
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-amber-600 to-amber-700 rounded-lg flex items-center justify-center">
+                    <ShoppingCart className="h-5 w-5 text-white" />
+                  </div>
+                  <CardTitle className="text-stone-200">Pedidos Recebidos</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {orders.length > 0 ? (
+                  <div className="space-y-4">
+                    {orders
+                      .sort((a, b) => b.timestamp - a.timestamp)
+                      .map((order) => (
+                        <Card
+                          key={order.id}
+                          className="bg-gradient-to-br from-stone-700/20 to-stone-800/20 border border-stone-600/30"
+                        >
+                          <CardContent className="p-6">
+                            <div className="flex items-start justify-between mb-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <h3 className="font-bold text-stone-100">Pedido #{order.id}</h3>
+                                  <Badge className={`${getStatusColor(order.status)} border text-xs`}>
+                                    {getStatusIcon(order.status)}
+                                    <span className="ml-1">
+                                      {order.status === "pending"
+                                        ? "Pendente"
+                                        : order.status === "paid"
+                                          ? "Pago"
+                                          : "Cancelado"}
+                                    </span>
+                                  </Badge>
+                                </div>
+                                <p className="text-stone-300 font-medium">{order.productName}</p>
+                                <p className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
+                                  R$ {order.price.toFixed(2).replace(".", ",")}
+                                </p>
+                                <p className="text-stone-400 text-sm mt-2">
+                                  {new Date(order.timestamp).toLocaleString("pt-BR")}
+                                </p>
+                              </div>
+
+                              <div className="flex gap-2">
+                                {order.status === "pending" && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => updateOrderStatus(order.id, "paid")}
+                                      className="bg-green-600/20 border-green-500/30 text-green-400 hover:bg-green-600/30"
+                                    >
+                                      <CheckCircle className="h-4 w-4 mr-1" />
+                                      Marcar como Pago
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="destructive"
+                                      onClick={() => updateOrderStatus(order.id, "cancelled")}
+                                      className="bg-red-600/20 border-red-500/30 text-red-400 hover:bg-red-600/30"
+                                    >
+                                      <XCircle className="h-4 w-4 mr-1" />
+                                      Cancelar
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+
+                            {order.pixCode && (
+                              <div className="mt-4 p-3 bg-stone-800/30 rounded-lg border border-stone-700/30">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <QrCode className="h-4 w-4 text-amber-400" />
+                                  <span className="text-stone-300 text-sm font-medium">Código PIX:</span>
+                                </div>
+                                <p className="text-stone-400 text-xs font-mono break-all">{order.pixCode}</p>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-16">
+                    <div className="bg-gradient-to-br from-stone-800/30 to-stone-900/30 backdrop-blur-sm rounded-2xl p-12 border border-stone-700/30 max-w-md mx-auto">
+                      <ShoppingCart className="h-16 w-16 text-stone-400/50 mx-auto mb-4" />
+                      <p className="text-stone-300 text-lg font-medium mb-2">Nenhum pedido recebido</p>
+                      <p className="text-stone-400 text-sm">
+                        Os pedidos aparecerão aqui quando os clientes fizerem compras
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   )
 }
