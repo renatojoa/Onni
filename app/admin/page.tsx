@@ -49,8 +49,8 @@ interface Product {
 // Para gerar: use um gerador SHA-256 online com suas credenciais
 const ADMIN_CREDENTIALS = {
   // Exemplo: usuário "admin" e senha "onni2024" (MUDE ESTAS!)
-  username: "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918", // hash de "admin"
-  password: "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f", // hash de "secret123"
+  username: "ef63d97825c0d5fe735fc3f0254b5de102027381579333528bb5101f0734e024", // hash de "admin"
+  password: "09c97767a8412fb6263a8daaedd018c30eea7903c72541f2b70fd6b2b7c150c8", // hash de "secret123"
 }
 
 const SESSION_DURATION = 2 * 60 * 60 * 1000 // 2 horas em milliseconds
