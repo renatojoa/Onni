@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acessórios Onni - Bijuterias e Semi-joias</title>
+    <meta name="description" content="Semijoias que refletem uma elegância atemporal e enaltecem cada detalhe com sofisticação">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-section">
+                    <img src="images/logo.png" alt="Acessórios Onni" class="logo">
+                </div>
+                <nav class="nav-menu">
+                    <a href="#home" class="nav-link active">Início</a>
+                    <a href="#products" class="nav-link">Produtos</a>
+                    <a href="#about" class="nav-link">Sobre</a>
+                    <a href="#contact" class="nav-link">Contato</a>
+                </nav>
+                <div class="header-actions">
+                    <button class="icon-btn" onclick="openInstagram()">
+                        <i class="fab fa-instagram"></i>
+                    </button>
+                    <button class="icon-btn">
+                        <i class="fas fa-heart"></i>
+                    </button>
+                    <button class="icon-btn">
+                        <i class="fas fa-shopping-bag"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-effects">
+            <div class="effect-circle effect-1"></div>
+            <div class="effect-circle effect-2"></div>
+            <div class="effect-circle effect-3"></div>
+        </div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-icons">
+                    <i class="fas fa-sparkles sparkle-1"></i>
+                    <i class="fas fa-crown crown-icon"></i>
+                    <i class="fas fa-sparkles sparkle-2"></i>
+                </div>
+                <h1 class="hero-title">Acessórios Onni</h1>
+                <p class="hero-subtitle">
+                    Semijoias que refletem uma elegância atemporal
+                    <span>e enaltecem cada detalhe com sofisticação</span>
+                </p>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-gem"></i>
+                        Ver Coleção Exclusiva
+                    </button>
+                    <button class="btn btn-outline" onclick="openInstagram()">
+                        <i class="fab fa-instagram"></i>
+                        Siga no Instagram
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Instagram Section -->
+    <section class="instagram-section">
+        <div class="container">
+            <div class="instagram-content">
+                <div class="section-header">
+                    <i class="fab fa-instagram"></i>
+                    <h2>Siga-nos no Instagram</h2>
+                    <i class="fab fa-instagram"></i>
+                </div>
+                <p>Acompanhe nossas novidades, tendências e inspirações diárias no @onniacessorios</p>
+                <button class="btn btn-instagram" onclick="openInstagram()">
+                    <i class="fab fa-instagram"></i>
+                    @onniacessorios
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Product Categories -->
+    <section id="products" class="categories-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Nossas Coleções</h2>
+                <p>Descubra a categoria perfeita para cada ocasião</p>
+            </div>
+
+            <!-- Joias Carousel -->
+            <div class="category-carousel">
+                <div class="carousel-header">
+                    <h3>💎 Joias</h3>
+                    <div class="carousel-controls">
+                        <button class="carousel-btn" onclick="prevSlide('joias')">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="carousel-btn" onclick="nextSlide('joias')">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="carousel-container" id="joias-carousel">
+                    <div class="products-grid" id="joias-products"></div>
+                </div>
+            </div>
+
+            <!-- Semijoias Carousel -->
+            <div class="category-carousel">
+                <div class="carousel-header">
+                    <h3>✨ Semijoias</h3>
+                    <div class="carousel-controls">
+                        <button class="carousel-btn" onclick="prevSlide('semijoias')">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="carousel-btn" onclick="nextSlide('semijoias')">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="carousel-container" id="semijoias-carousel">
+                    <div class="products-grid" id="semijoias-products"></div>
+                </div>
+            </div>
+
+            <!-- Bijuterias Carousel -->
+            <div class="category-carousel">
+                <div class="carousel-header">
+                    <h3>🌟 Bijuterias</h3>
+                    <div class="carousel-controls">
+                        <button class="carousel-btn" onclick="prevSlide('bijuterias')">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="carousel-btn" onclick="nextSlide('bijuterias')">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="carousel-container" id="bijuterias-carousel">
+                    <div class="products-grid" id="bijuterias-products"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- All Products Section -->
+    <section class="all-products-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Coleção Completa</h2>
+                <p>Encontre a peça perfeita que combina com seu estilo único</p>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters-container">
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="search-input" placeholder="Buscar produtos...">
+                </div>
+                <div class="filter-selects">
+                    <select id="type-filter">
+                        <option value="all">Todos os Tipos</option>
+                        <option value="Joias">Joias</option>
+                        <option value="Semijoias">Semijoias</option>
+                        <option value="Bijuterias">Bijuterias</option>
+                    </select>
+                    <select id="category-filter">
+                        <option value="all">Todas Categorias</option>
+                        <option value="Colares">Colares</option>
+                        <option value="Brincos">Brincos</option>
+                        <option value="Pulseiras">Pulseiras</option>
+                        <option value="Anéis">Anéis</option>
+                        <option value="Conjuntos">Conjuntos</option>
+                    </select>
+                    <select id="color-filter">
+                        <option value="all">Todas Cores</option>
+                        <option value="Dourado">Dourado</option>
+                        <option value="Prata">Prata</option>
+                        <option value="Branco">Branco</option>
+                        <option value="Multicolor">Multicolor</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Products Grid -->
+            <div class="products-grid" id="all-products"></div>
+            <div class="no-products" id="no-products" style="display: none;">
+                <i class="fas fa-search"></i>
+                <p>Nenhum produto encontrado</p>
+                <span>Tente ajustar os filtros de busca</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- PIX Section -->
+    <section class="pix-section">
+        <div class="pix-bg"></div>
+        <div class="pix-effects">
+            <div class="effect-circle effect-1"></div>
+            <div class="effect-circle effect-2"></div>
+        </div>
+        <div class="container">
+            <div class="pix-content">
+                <h2>Pagamento Instantâneo</h2>
+                <p>Pague com PIX e receba seu produto mais rapidamente! Processo seguro e instantâneo.</p>
+                <div class="pix-qr">
+                    <div class="qr-placeholder">
+                        <div class="qr-icon">
+                            <i class="fas fa-gem"></i>
+                        </div>
+                        <p>QR Code PIX<br><span>Será gerado após seleção do produto</span></p>
+                    </div>
+                    <p class="qr-description">
+                        Escaneie o código QR com seu app do banco para pagar via PIX de forma segura e instantânea
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <img src="images/logo.png" alt="Acessórios Onni" class="footer-logo">
+                    <p>Acessórios exclusivos para mulheres que valorizam elegância, qualidade e sofisticação em cada detalhe.</p>
+                    <div class="social-links">
+                        <button class="social-btn instagram" onclick="openInstagram()">
+                            <i class="fab fa-instagram"></i>
+                        </button>
+                        <button class="social-btn whatsapp" onclick="openWhatsApp()">
+                            <i class="fab fa-whatsapp"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Contato Direto</h3>
+                    <div class="contact-item">
+                        <div class="contact-icon whatsapp">
+                            <i class="fab fa-whatsapp"></i>
+                        </div>
+                        <div>
+                            <p>WhatsApp</p>
+                            <span>+55 81 9797-9854</span>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon email">
+                            <i class="fas fa-at"></i>
+                        </div>
+                        <div>
+                            <p>Email</p>
+                            <span>contato@acessoriosonni.com</span>
+                        </div>
+                    </div>
+                    <div class="contact-item" onclick="openInstagram()">
+                        <div class="contact-icon instagram">
+                            <i class="fab fa-instagram"></i>
+                        </div>
+                        <div>
+                            <p>Instagram</p>
+                            <span>@onniacessorios</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Informações</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Política de Privacidade</a></li>
+                        <li><a href="#">Termos de Uso</a></li>
+                        <li><a href="#">Trocas e Devoluções</a></li>
+                        <li><a href="#">Frete e Entrega</a></li>
+                        <li><a href="#">Garantia de Qualidade</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Acessórios Onni. Todos os direitos reservados.</p>
+                <div class="footer-credits">
+                    <span>Desenvolvido com</span>
+                    <i class="fas fa-heart"></i>
+                    <span>para você</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Admin Link (Hidden) -->
+    <div class="admin-access">
+        <a href="admin.html" class="admin-link">
+            <i class="fas fa-cog"></i>
+        </a>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
