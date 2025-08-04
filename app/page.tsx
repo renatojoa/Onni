@@ -189,7 +189,7 @@ function ProductCarousel({ products, title }: { products: Product[]; title: stri
 
   const handleWhatsAppClick = (product: Product) => {
     const message = `Olá! Tenho interesse no produto: ${product.name} - R$ ${product.price.toFixed(2).replace(".", ",")}`
-    const whatsappUrl = `https://wa.me/5581979798540?text=${encodeURIComponent(message)}`
+    const whatsappUrl = `https://wa.me/81979798540?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, "_blank")
   }
 
@@ -328,7 +328,7 @@ export default function HomePage() {
 
   const handleWhatsAppClick = (product: Product) => {
     const message = `Olá! Tenho interesse no produto: ${product.name} - R$ ${product.price.toFixed(2).replace(".", ",")}`
-    const whatsappUrl = `https://wa.me/5581979798540?text=${encodeURIComponent(message)}`
+    const whatsappUrl = `https://wa.me/81979798540?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, "_blank")
   }
 
