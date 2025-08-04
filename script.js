@@ -422,3 +422,32 @@ const lucide = {
     console.log("Lucide icons created")
   },
 }
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Lista de vídeos disponíveis
+    const videos = [
+        'public/videos/oonni_bg.mp4',
+        'public/videos/oonni_bg_alternativo.mp4' // Substitua pelo caminho do seu segundo vídeo
+    ];
+    
+    // Seleciona um vídeo aleatório
+    const randomVideo = videos[Math.floor(Math.random() * videos.length)];
+    
+    // Obtém o elemento de vídeo
+    const videoElement = document.getElementById('hero-video');
+    
+    // Cria o elemento source
+    const sourceElement = document.createElement('source');
+    sourceElement.setAttribute('src', randomVideo);
+    sourceElement.setAttribute('type', 'video/mp4');
+    
+    // Adiciona o source ao vídeo
+    videoElement.appendChild(sourceElement);
+    
+    // Carrega o vídeo
+    videoElement.load();
+    
+    // Inicia o vídeo (necessário para alguns navegadores)
+    videoElement.play().catch(e => console.log("Autoplay não permitido: ", e));
+});
+</script>
