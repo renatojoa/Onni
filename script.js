@@ -209,7 +209,7 @@ function generateOrderId() {
 
 // Generate PIX code
 function generatePixCode(orderId, amount) {
-  const pixKey = "81979798540"
+  const pixKey = "81997979854"
   const merchantName = "ACESSORIOS ONNI"
   const merchantCity = "RECIFE"
   const txId = orderId
@@ -242,7 +242,7 @@ function openWhatsApp(product) {
   saveOrder(orderId, product, "whatsapp")
 
   const message = `Olá! Tenho interesse no produto: ${product.name} - R$ ${product.price.toFixed(2).replace(".", ",")} (Pedido: ${orderId})`
-  const whatsappUrl = `https://wa.me/5581979798540?text=${encodeURIComponent(message)}`
+  const whatsappUrl = `https://wa.me/5581997979854?text=${encodeURIComponent(message)}`
   window.open(whatsappUrl, "_blank")
 }
 
@@ -290,7 +290,7 @@ function sendPixReceipt() {
   if (!currentPixOrder) return
 
   const message = `Olá! Realizei o pagamento PIX do pedido ${currentPixOrder.id} - ${currentPixOrder.productName}. Segue o comprovante:`
-  const whatsappUrl = `https://wa.me/5581979798540?text=${encodeURIComponent(message)}`
+  const whatsappUrl = `https://wa.me/5581997979854?text=${encodeURIComponent(message)}`
   window.open(whatsappUrl, "_blank")
 }
 
