@@ -5,38 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel Administrativo - Acessórios Onni</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"></script>
 </head>
-<body class="admin-body">
+<body>
     <!-- Login Form -->
     <div id="login-form" class="login-container">
         <div class="login-card">
             <div class="login-header">
                 <div class="login-icon">
-                    <i class="fas fa-lock"></i>
+                    <i data-lucide="lock"></i>
                 </div>
                 <h1>Painel Administrativo</h1>
                 <p>Acessórios Onni</p>
             </div>
-            <form id="admin-login" class="login-form">
+            
+            <form id="admin-login-form" class="login-form">
                 <div class="form-group">
                     <label for="username">Usuário</label>
-                    <input type="text" id="username" placeholder="Digite seu usuário" required>
+                    <input type="text" id="username" name="username" placeholder="Digite seu usuário" required>
                 </div>
+                
                 <div class="form-group">
                     <label for="password">Senha</label>
                     <div class="password-input">
-                        <input type="password" id="password" placeholder="Digite sua senha" required>
+                        <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
                         <button type="button" class="password-toggle" onclick="togglePassword()">
-                            <i class="fas fa-eye" id="password-icon"></i>
+                            <i data-lucide="eye" id="password-icon"></i>
                         </button>
                     </div>
                 </div>
-                <div id="login-error" class="error-message" style="display: none;"></div>
-                <button type="submit" class="btn btn-primary" id="login-btn">Entrar</button>
+                
+                <div id="login-error" class="error-alert" style="display: none;"></div>
+                
+                <button type="submit" id="login-btn" class="btn btn-primary">Entrar</button>
             </form>
-            <div class="security-info">
+            
+            <div class="login-security">
                 <h4>🔒 Segurança:</h4>
                 <ul>
                     <li>• Sessão expira em 2 horas</li>
@@ -49,14 +56,14 @@
     </div>
 
     <!-- Admin Panel -->
-    <div id="admin-panel" class="admin-panel" style="display: none;">
+    <div id="admin-panel" style="display: none;">
         <!-- Header -->
         <header class="admin-header">
             <div class="container">
                 <div class="admin-header-content">
                     <div class="admin-logo">
                         <div class="admin-icon">
-                            <i class="fas fa-crown"></i>
+                            <i data-lucide="crown"></i>
                         </div>
                         <div>
                             <h1>Painel Administrativo</h1>
@@ -65,11 +72,11 @@
                     </div>
                     <div class="admin-actions">
                         <button class="btn btn-primary" onclick="showAddProduct()">
-                            <i class="fas fa-plus"></i>
+                            <i data-lucide="plus"></i>
                             Novo Produto
                         </button>
                         <button class="btn btn-outline" onclick="logout()">
-                            <i class="fas fa-sign-out-alt"></i>
+                            <i data-lucide="log-out"></i>
                             Sair
                         </button>
                     </div>
@@ -83,31 +90,34 @@
                 <div class="stat-card">
                     <div class="stat-header">
                         <span>Total de Produtos</span>
-                        <i class="fas fa-box"></i>
+                        <i data-lucide="package"></i>
                     </div>
                     <div class="stat-value" id="total-products">0</div>
                     <div class="stat-label">produtos cadastrados</div>
                 </div>
+                
                 <div class="stat-card">
                     <div class="stat-header">
                         <span>Produtos em Destaque</span>
-                        <i class="fas fa-crown"></i>
+                        <i data-lucide="crown"></i>
                     </div>
                     <div class="stat-value" id="featured-products">0</div>
                     <div class="stat-label">em destaque</div>
                 </div>
+                
                 <div class="stat-card">
                     <div class="stat-header">
                         <span>Total de Vendas</span>
-                        <i class="fas fa-chart-line"></i>
+                        <i data-lucide="trending-up"></i>
                     </div>
                     <div class="stat-value" id="total-sales">0</div>
                     <div class="stat-label">unidades vendidas</div>
                 </div>
+                
                 <div class="stat-card">
                     <div class="stat-header">
                         <span>Receita Total</span>
-                        <i class="fas fa-chart-bar"></i>
+                        <i data-lucide="bar-chart-3"></i>
                     </div>
                     <div class="stat-value" id="total-revenue">R$ 0,00</div>
                     <div class="stat-label">receita estimada</div>
@@ -115,33 +125,36 @@
             </div>
 
             <!-- Product Form -->
-            <div id="product-form-container" class="form-container" style="display: none;">
+            <div id="product-form-section" class="form-section" style="display: none;">
                 <div class="form-card">
                     <div class="form-header">
                         <div class="form-icon">
-                            <i class="fas fa-plus" id="form-icon"></i>
+                            <i data-lucide="plus" id="form-icon"></i>
                         </div>
                         <h2 id="form-title">Adicionar Novo Produto</h2>
                     </div>
-                    <form id="product-form" class="product-form">
+                    
+                    <form id="product-form">
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="product-name">Nome do Produto</label>
-                                <input type="text" id="product-name" placeholder="Nome do produto" required>
+                                <input type="text" id="product-name" name="name" placeholder="Nome do produto" required>
                             </div>
                             <div class="form-group">
                                 <label for="product-price">Preço (R$)</label>
-                                <input type="number" id="product-price" step="0.01" placeholder="0.00" required>
+                                <input type="number" id="product-price" name="price" step="0.01" placeholder="0.00" required>
                             </div>
                         </div>
+                        
                         <div class="form-group">
                             <label for="product-description">Descrição</label>
-                            <textarea id="product-description" placeholder="Descrição detalhada do produto" rows="4"></textarea>
+                            <textarea id="product-description" name="description" placeholder="Descrição detalhada do produto" rows="4"></textarea>
                         </div>
+                        
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="product-type">Tipo</label>
-                                <select id="product-type" required>
+                                <select id="product-type" name="type" required>
                                     <option value="">Selecione o tipo</option>
                                     <option value="Joias">Joias</option>
                                     <option value="Semijoias">Semijoias</option>
@@ -150,7 +163,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="product-category">Categoria</label>
-                                <select id="product-category" required>
+                                <select id="product-category" name="category" required>
                                     <option value="">Selecione a categoria</option>
                                     <option value="Colares">Colares</option>
                                     <option value="Brincos">Brincos</option>
@@ -160,78 +173,54 @@
                                 </select>
                             </div>
                         </div>
+                        
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="product-color">Cor</label>
-                                <select id="product-color" required>
+                                <select id="product-color" name="color" required>
                                     <option value="">Selecione a cor</option>
                                     <option value="Dourado">Dourado</option>
                                     <option value="Prata">Prata</option>
                                     <option value="Branco">Branco</option>
                                     <option value="Preto">Preto</option>
                                     <option value="Multicolor">Multicolor</option>
-                                    <option value="Rosa">Rosa</option>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label for="product-size">Tamanho</label>
-                                <select id="product-size" required>
-                                    <option value="">Selecione o tamanho</option>
-                                    <option value="Pequeno">Pequeno</option>
-                                    <option value="Médio">Médio</option>
-                                    <option value="Grande">Grande</option>
-                                    <option value="Ajustável">Ajustável</option>
-                                    <option value="Variados">Variados</option>
-                                    <option value="Único">Único</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
                             <div class="form-group">
                                 <label for="product-material">Material</label>
-                                <select id="product-material" required>
+                                <select id="product-material" name="material" required>
                                     <option value="">Selecione o material</option>
                                     <option value="Ouro 18k">Ouro 18k</option>
-                                    <option value="Ouro Branco 18k">Ouro Branco 18k</option>
                                     <option value="Folheado a Ouro">Folheado a Ouro</option>
                                     <option value="Prata 925">Prata 925</option>
                                     <option value="Aço Inoxidável">Aço Inoxidável</option>
                                     <option value="Liga Metálica">Liga Metálica</option>
-                                    <option value="Cristal">Cristal</option>
-                                    <option value="Pérola">Pérola</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="product-occasion">Ocasião</label>
-                                <select id="product-occasion" required>
-                                    <option value="">Selecione a ocasião</option>
-                                    <option value="Casual">Casual</option>
-                                    <option value="Festa">Festa</option>
-                                    <option value="Trabalho">Trabalho</option>
-                                    <option value="Noivado">Noivado</option>
-                                    <option value="Casamento">Casamento</option>
                                 </select>
                             </div>
                         </div>
+                        
                         <div class="form-group">
                             <label for="product-image">URL da Imagem</label>
-                            <input type="url" id="product-image" placeholder="URL da imagem do produto">
+                            <input type="url" id="product-image" name="image" placeholder="URL da imagem do produto">
                         </div>
-                        <div class="form-group featured-toggle">
-                            <label class="toggle-label">
-                                <input type="checkbox" id="product-featured">
-                                <span class="toggle-slider"></span>
-                                <i class="fas fa-crown"></i>
-                                Produto em Destaque
-                            </label>
+                        
+                        <div class="form-group">
+                            <div class="switch-container">
+                                <input type="checkbox" id="product-featured" name="featured" class="switch">
+                                <label for="product-featured" class="switch-label">
+                                    <i data-lucide="crown"></i>
+                                    Produto em Destaque
+                                </label>
+                            </div>
                         </div>
+                        
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i>
+                                <i data-lucide="save"></i>
                                 Salvar Produto
                             </button>
-                            <button type="button" class="btn btn-outline" onclick="hideProductForm()">
-                                <i class="fas fa-times"></i>
+                            <button type="button" class="btn btn-outline" onclick="cancelForm()">
+                                <i data-lucide="x"></i>
                                 Cancelar
                             </button>
                         </div>
@@ -241,26 +230,35 @@
 
             <!-- Products List -->
             <div class="products-section">
-                <div class="section-header">
-                    <div class="section-icon">
-                        <i class="fas fa-gem"></i>
+                <div class="products-header">
+                    <div class="products-icon">
+                        <i data-lucide="gem"></i>
                     </div>
                     <h2>Produtos Cadastrados</h2>
                 </div>
-                <div class="admin-products-grid" id="admin-products"></div>
-                <div class="no-products" id="admin-no-products" style="display: none;">
-                    <i class="fas fa-box"></i>
-                    <p>Nenhum produto cadastrado</p>
-                    <span>Comece adicionando seu primeiro produto</span>
-                    <button class="btn btn-primary" onclick="showAddProduct()">
-                        <i class="fas fa-plus"></i>
-                        Adicionar Primeiro Produto
-                    </button>
+                <div class="products-grid" id="admin-products-grid">
+                    <!-- Products will be populated by JavaScript -->
+                </div>
+                
+                <div id="no-products" class="no-products" style="display: none;">
+                    <div class="no-products-content">
+                        <i data-lucide="package" class="no-products-icon"></i>
+                        <p class="no-products-title">Nenhum produto cadastrado</p>
+                        <p class="no-products-text">Comece adicionando seu primeiro produto</p>
+                        <button class="btn btn-primary" onclick="showAddProduct()">
+                            <i data-lucide="plus"></i>
+                            Adicionar Primeiro Produto
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="admin.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
 </body>
 </html>
