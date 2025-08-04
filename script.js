@@ -1,11 +1,15 @@
-// Products data
+// Default product image
+const DEFAULT_PRODUCT_IMAGE =
+  "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/download-japQzoFSzfLJdQBuxq6rFrzntKOXlr.jpeg"
+
+// Products data with updated images
 const products = [
   // Joias
   {
     id: "1",
     name: "Anel Ouro 18k Solitário",
     price: 1299.9,
-    image: "https://via.placeholder.com/400x400?text=Anel+Ouro+18k",
+    image: DEFAULT_PRODUCT_IMAGE,
     category: "Anéis",
     type: "Joias",
     color: "Dourado",
@@ -19,7 +23,7 @@ const products = [
     id: "2",
     name: "Colar Ouro Branco Diamante",
     price: 2199.9,
-    image: "https://via.placeholder.com/400x400?text=Colar+Diamante",
+    image: DEFAULT_PRODUCT_IMAGE,
     category: "Colares",
     type: "Joias",
     color: "Branco",
@@ -33,7 +37,7 @@ const products = [
     id: "3",
     name: "Brincos Ouro Pérola Natural",
     price: 899.9,
-    image: "https://via.placeholder.com/400x400?text=Brincos+Pérola",
+    image: DEFAULT_PRODUCT_IMAGE,
     category: "Brincos",
     type: "Joias",
     color: "Dourado",
@@ -49,7 +53,7 @@ const products = [
     id: "4",
     name: "Colar Folheado Cristal",
     price: 189.9,
-    image: "https://via.placeholder.com/400x400?text=Colar+Semijoia",
+    image: DEFAULT_PRODUCT_IMAGE,
     category: "Colares",
     type: "Semijoias",
     color: "Dourado",
@@ -63,7 +67,7 @@ const products = [
     id: "5",
     name: "Brincos Prata 925 Zircônia",
     price: 129.9,
-    image: "https://via.placeholder.com/400x400?text=Brincos+Prata",
+    image: DEFAULT_PRODUCT_IMAGE,
     category: "Brincos",
     type: "Semijoias",
     color: "Prata",
@@ -77,7 +81,7 @@ const products = [
     id: "6",
     name: "Pulseira Folheada Elegante",
     price: 149.9,
-    image: "https://via.placeholder.com/400x400?text=Pulseira+Elegante",
+    image: DEFAULT_PRODUCT_IMAGE,
     category: "Pulseiras",
     type: "Semijoias",
     color: "Dourado",
@@ -93,7 +97,7 @@ const products = [
     id: "7",
     name: "Conjunto Festa Dourado",
     price: 79.9,
-    image: "https://via.placeholder.com/400x400?text=Conjunto+Bijuteria",
+    image: DEFAULT_PRODUCT_IMAGE,
     category: "Conjuntos",
     type: "Bijuterias",
     color: "Dourado",
@@ -107,7 +111,7 @@ const products = [
     id: "8",
     name: "Choker Minimalista",
     price: 39.9,
-    image: "https://via.placeholder.com/400x400?text=Choker+Minimalista",
+    image: DEFAULT_PRODUCT_IMAGE,
     category: "Colares",
     type: "Bijuterias",
     color: "Dourado",
@@ -121,7 +125,7 @@ const products = [
     id: "9",
     name: "Brincos Cristais Coloridos",
     price: 49.9,
-    image: "https://via.placeholder.com/400x400?text=Brincos+Coloridos",
+    image: DEFAULT_PRODUCT_IMAGE,
     category: "Brincos",
     type: "Bijuterias",
     color: "Multicolor",
@@ -138,18 +142,105 @@ let filteredProducts = [...products]
 
 // WhatsApp function
 function openWhatsApp(product) {
-  const message = `Olá! Vim Pelo Site e Tenho interesse no produto: ${product.name} - R$ ${product.price.toFixed(2).replace(".", ",")}`
-  const whatsappUrl = `https://wa.me/5581997979854?text=${encodeURIComponent(message)}`
+  const message = `Olá! Tenho interesse no produto: ${product.name} - R$ ${product.price.toFixed(2).replace(".", ",")}`
+  const whatsappUrl = `https://wa.me/5581979798540?text=${encodeURIComponent(message)}`
   window.open(whatsappUrl, "_blank")
 }
 
-// Create product card HTML
+// Load products from localStorage (shared with admin)
+function loadProductsFromStorage() {
+  const saved = localStorage.getItem("admin_products")
+  if (saved) {
+    try {
+      const adminProducts = JSON.parse(saved)
+      // Update global products array
+      Object.assign(products, adminProducts)
+      products.length = adminProducts.length
+      return adminProducts
+    } catch (error) {
+      console.error("Error loading products:", error)
+    }
+  }
+  return products
+}
+
+// Sync products periodically
+function startProductSync() {
+  setInterval(() => {
+    const loadedProducts = loadProductsFromStorage()
+    if (loadedProducts.length !== products.length) {
+      // Re-initialize page with new products
+      Object.assign(products, loadedProducts)
+      products.length = loadedProducts.length
+      filteredProducts = [...products]
+
+      // Re-setup carousels
+      const joias = products.filter((p) => p.type === "Joias")
+      const semijoias = products.filter((p) => p.type === "Semijoias")
+      const bijuterias = products.filter((p) => p.type === "Bijuterias")
+
+      setupCarousel("joias-carousel", "joias-prev", "joias-next", joias)
+      setupCarousel("semijoias-carousel", "semijoias-prev", "semijoias-next", semijoias)
+      setupCarousel("bijuterias-carousel", "bijuterias-prev", "bijuterias-next", bijuterias)
+
+      // Re-render products
+      renderProducts()
+    }
+  }, 3000) // Check every 3 seconds
+}
+
+// Video controls
+function setupVideoControls() {
+  const video = document.getElementById("hero-video")
+  const playBtn = document.getElementById("video-play-btn")
+  const playIcon = document.getElementById("video-play-icon")
+  const playText = document.getElementById("video-play-text")
+
+  if (!video || !playBtn) return
+
+  playBtn.addEventListener("click", () => {
+    if (video.paused) {
+      video.play()
+      playIcon.setAttribute("data-lucide", "pause")
+      playText.textContent = "Pausar"
+    } else {
+      video.pause()
+      playIcon.setAttribute("data-lucide", "play")
+      playText.textContent = "Reproduzir"
+    }
+
+    // Refresh icons
+    if (typeof lucide !== "undefined" && lucide.createIcons) {
+      lucide.createIcons()
+    }
+  })
+
+  // Update button state based on video events
+  video.addEventListener("play", () => {
+    playIcon.setAttribute("data-lucide", "pause")
+    playText.textContent = "Pausar"
+    if (typeof lucide !== "undefined" && lucide.createIcons) {
+      lucide.createIcons()
+    }
+  })
+
+  video.addEventListener("pause", () => {
+    playIcon.setAttribute("data-lucide", "play")
+    playText.textContent = "Reproduzir"
+    if (typeof lucide !== "undefined" && lucide.createIcons) {
+      lucide.createIcons()
+    }
+  })
+}
+
+// Create product card HTML with improved image handling
 function createProductCard(product) {
+  const productImage = product.image || DEFAULT_PRODUCT_IMAGE
+
   return `
         <div class="product-card" onclick="openWhatsApp(${JSON.stringify(product).replace(/"/g, "&quot;")})">
             <div class="product-image">
-                <img src="${product.image}" alt="${product.name}" loading="lazy">
-                <div class="product-image-overlay"></div>
+                <img src="${productImage}" alt="${product.name}" loading="lazy" onerror="this.src='${DEFAULT_PRODUCT_IMAGE}'">
                 ${
                   product.featured
                     ? `
@@ -260,6 +351,14 @@ function renderProducts() {
 
 // Initialize page
 function initializePage() {
+  // Load products from localStorage first
+  const loadedProducts = loadProductsFromStorage()
+  if (loadedProducts && loadedProducts.length > 0) {
+    Object.assign(products, loadedProducts)
+    products.length = loadedProducts.length
+    filteredProducts = [...products]
+  }
+
   // Setup carousels
   const joias = products.filter((p) => p.type === "Joias")
   const semijoias = products.filter((p) => p.type === "Semijoias")
@@ -268,6 +367,12 @@ function initializePage() {
   setupCarousel("joias-carousel", "joias-prev", "joias-next", joias)
   setupCarousel("semijoias-carousel", "semijoias-prev", "semijoias-next", semijoias)
   setupCarousel("bijuterias-carousel", "bijuterias-prev", "bijuterias-next", bijuterias)
+
+  // Setup video controls
+  setupVideoControls()
+
+  // Start product synchronization
+  startProductSync()
 
   // Setup filters
   const searchInput = document.getElementById("search-input")
@@ -295,6 +400,15 @@ function initializePage() {
         })
       }
     })
+  })
+
+  // Listen for storage changes (when admin updates products)
+  window.addEventListener("storage", (e) => {
+    if (e.key === "admin_products") {
+      setTimeout(() => {
+        location.reload() // Reload page to show new products
+      }, 1000)
+    }
   })
 }
 

@@ -193,6 +193,10 @@ function logout() {
   document.getElementById("password").value = ""
 }
 
+// Default product image
+const DEFAULT_PRODUCT_IMAGE =
+  "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/download-japQzoFSzfLJdQBuxq6rFrzntKOXlr.jpeg"
+
 // Load products from localStorage
 function loadProducts() {
   const saved = localStorage.getItem("admin_products")
@@ -203,13 +207,13 @@ function loadProducts() {
       adminProducts = []
     }
   } else {
-    // Initialize with some sample products
+    // Initialize with some sample products using the default image
     adminProducts = [
       {
         id: Date.now().toString(),
         name: "Colar Dourado Elegante",
         price: 89.9,
-        image: "https://via.placeholder.com/400x400?text=Colar+Elegante",
+        image: DEFAULT_PRODUCT_IMAGE,
         type: "Semijoias",
         category: "Colares",
         color: "Dourado",
@@ -226,6 +230,15 @@ function loadProducts() {
 // Save products to localStorage
 function saveProducts() {
   localStorage.setItem("admin_products", JSON.stringify(adminProducts))
+
+  // Trigger storage event for main site synchronization
+  window.dispatchEvent(
+    new StorageEvent("storage", {
+      key: "admin_products",
+      newValue: JSON.stringify(adminProducts),
+      storageArea: localStorage,
+    }),
+  )
 }
 
 // Update statistics
@@ -289,7 +302,7 @@ function cancelForm() {
   currentEditingProduct = null
 }
 
-// Handle form submission
+// Handle form submission with default image fallback
 function handleProductForm(event) {
   event.preventDefault()
 
@@ -302,7 +315,7 @@ function handleProductForm(event) {
     category: formData.get("category"),
     color: formData.get("color"),
     material: formData.get("material"),
-    image: formData.get("image") || "https://via.placeholder.com/400x400?text=Produto",
+    image: formData.get("image") || DEFAULT_PRODUCT_IMAGE,
     featured: formData.has("featured"),
   }
 
@@ -326,6 +339,7 @@ function handleProductForm(event) {
   updateStatistics()
   renderProducts()
   cancelForm()
+  notifyProductUpdate()
 }
 
 // Delete product
@@ -336,14 +350,17 @@ function deleteProduct(productId) {
     updateStatistics()
     renderProducts()
   }
+  notifyProductUpdate()
 }
 
-// Create admin product card HTML
+// Create admin product card HTML with improved image handling
 function createAdminProductCard(product) {
+  const productImage = product.image || DEFAULT_PRODUCT_IMAGE
+
   return `
         <div class="admin-product-card">
             <div class="product-image">
-                <img src="${product.image}" alt="${product.name}" loading="lazy">
+                <img src="${productImage}" alt="${product.name}" loading="lazy" onerror="this.src='${DEFAULT_PRODUCT_IMAGE}'">
                 ${
                   product.featured
                     ? `
@@ -398,6 +415,24 @@ function renderProducts() {
       lucide.createIcons()
     }
   }
+}
+
+// Notify main site about product changes
+function notifyProductUpdate() {
+  // Create a custom event to notify main site
+  const event = new CustomEvent("adminProductsUpdated", {
+    detail: { products: adminProducts },
+  })
+  window.dispatchEvent(event)
+
+  // Also trigger storage event
+  window.dispatchEvent(
+    new StorageEvent("storage", {
+      key: "admin_products",
+      newValue: JSON.stringify(adminProducts),
+      storageArea: localStorage,
+    }),
+  )
 }
 
 // Initialize admin panel
