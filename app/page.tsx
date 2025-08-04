@@ -124,7 +124,7 @@ function VideoCarousel() {
         <Button
           size="lg"
           onClick={() =>
-            window.open("https://wa.me/5581979798540?text=Olá! Gostaria de conhecer mais sobre a coleção!", "_blank")
+            window.open("https://wa.me/5581997979854?text=Olá! Gostaria de conhecer mais sobre a coleção!", "_blank")
           }
           className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-105"
         >
@@ -382,7 +382,7 @@ function PixModal({
           <Button
             onClick={() => {
               const message = `Olá! Realizei o pagamento PIX do pedido ${orderId} - ${product.name}. Segue o comprovante:`
-              const whatsappUrl = `https://wa.me/5581979798540?text=${encodeURIComponent(message)}`
+              const whatsappUrl = `https://wa.me/5581997979854?text=${encodeURIComponent(message)}`
               window.open(whatsappUrl, "_blank")
             }}
             className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
@@ -424,7 +424,7 @@ function ProductCarousel({ products, title }: { products: Product[]; title: stri
     saveOrder(orderId, product, "whatsapp")
 
     const message = `Olá! Tenho interesse no produto: ${product.name} - R$ ${product.price.toFixed(2).replace(".", ",")} (Pedido: ${orderId})`
-    const whatsappUrl = `https://wa.me/5581979798540?text=${encodeURIComponent(message)}`
+    const whatsappUrl = `https://wa.me/5581997979854?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, "_blank")
   }
 
@@ -633,7 +633,7 @@ export default function HomePage() {
     saveOrder(orderId, product, "whatsapp")
 
     const message = `Olá! Tenho interesse no produto: ${product.name} - R$ ${product.price.toFixed(2).replace(".", ",")} (Pedido: ${orderId})`
-    const whatsappUrl = `https://wa.me/5581979798540?text=${encodeURIComponent(message)}`
+    const whatsappUrl = `https://wa.me/5581997979854?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, "_blank")
   }
 
