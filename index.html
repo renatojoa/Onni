@@ -81,34 +81,47 @@
         <!-- Section Divider -->
         <div class="section-divider"></div>
 
-        <!-- Video Section - Com carousel de vídeos -->
-        <section class="video-section">
-            <div class="video-bg"></div>
-            <div class="container">
-                <div class="section-header">
-                    <h2>Nossa Coleção em Destaque</h2>
-                    <p>Veja de perto a qualidade e elegância de nossos acessórios</p>
-                </div>
+<!-- Video Section - Substitui a seção do Instagram -->
+<section class="video-section">
+    <div class="video-bg"></div>
+    <div class="container">
+        <div class="section-header">
+            <h2>Nossa Coleção em Destaque</h2>
+            <p>Veja de perto a qualidade e elegância de nossos acessórios</p>
+        </div>
+        
+        <div class="video-container">
+            <div class="video-wrapper">
+                <video autoplay loop muted playsinline>
+                    <source src="videos/hero-video.mp4" type="video/mp4">
+                    Seu navegador não suporta vídeo HTML5.
+                </video>
                 
-                <div class="video-container">
-                    <div class="video-wrapper">
-                        <video id="main-video" muted playsinline>
-                            <source src="public\videos\oonni_bg.mp4" type="video/mp4">
-                            Seu navegador não suporta vídeo HTML5.
-                        </video>
-                        
-                        <!-- Video Overlay -->
-                        <div class="video-overlay-inner"></div>
-                        
-                        <!-- Video Badge -->
-                        <div class="video-badge">
-                            <i data-lucide="sparkles"></i>
-                            New
-                        </div>
-                    </div>
+                <!-- Video Overlay -->
+                <div class="video-overlay-inner"></div>
+                
+                <!-- Video Badge -->
+                <div class="video-badge">
+                    <i data-lucide="sparkles"></i>
+                    Coleção 2024
                 </div>
             </div>
-        </section>
+        </div>
+
+        <!-- Call to Action Buttons Below Video -->
+        <div class="video-cta-buttons">
+            <button class="btn btn-instagram" onclick="window.open('https://www.instagram.com/onniacessorios/', '_blank')">
+                <i data-lucide="instagram"></i>
+                @onniacessorios
+            </button>
+            
+            <button class="btn btn-whatsapp" onclick="window.open('https://wa.me/5581979798540?text=Olá! Gostaria de conhecer mais sobre a coleção!', '_blank')">
+                <i data-lucide="message-circle"></i>
+                Fale Conosco
+            </button>
+        </div>
+    </div>
+</section>
 
         <!-- Section Divider -->
         <div class="section-divider"></div>
