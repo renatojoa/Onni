@@ -319,6 +319,11 @@ function ProductCarousel({ products, title }: { products: Product[]; title: stri
   const [showPixModal, setShowPixModal] = useState(false)
   const itemsPerView = 4
 
+  // Don't render if no products
+  if (products.length === 0) {
+    return null
+  }
+
   const nextSlide = () => {
     setCurrentIndex((prev) => (prev + itemsPerView >= products.length ? 0 : prev + itemsPerView))
   }
@@ -699,28 +704,58 @@ export default function HomePage() {
         {/* Divider */}
         <div className="h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent"></div>
 
-        {/* Instagram Section */}
-        <section className="py-20 bg-gradient-to-br from-stone-900/90 via-stone-800/90 to-stone-900/90 backdrop-blur-sm">
-          <div className="container mx-auto px-4 text-center">
-            <div className="max-w-2xl mx-auto">
-              <div className="flex items-center justify-center mb-6">
-                <Instagram className="h-8 w-8 text-pink-400 mr-3" />
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-400 to-amber-400 bg-clip-text text-transparent">
-                  Siga-nos no Instagram
-                </h2>
-                <Instagram className="h-8 w-8 text-pink-400 ml-3" />
+        {/* Video Section - Substitui a seção do Instagram */}
+        <section className="py-20 bg-gradient-to-br from-stone-900/90 via-amber-900/90 to-stone-800/90 backdrop-blur-sm">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-amber-200 to-stone-200 bg-clip-text text-transparent mb-4">
+                Nossa Coleção em Destaque
+              </h2>
+              <p className="text-stone-300 text-lg">Veja de perto a qualidade e elegância de nossos acessórios</p>
+            </div>
+
+            <div className="max-w-4xl mx-auto relative">
+              <div className="relative overflow-hidden rounded-2xl shadow-2xl">
+                <video className="w-full h-[400px] md:h-[500px] object-cover" autoPlay loop muted playsInline>
+                  <source src="/videos/hero-video.mp4" type="video/mp4" />
+                  Seu navegador não suporta vídeo HTML5.
+                </video>
+
+                {/* Video Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-stone-900/60 via-transparent to-stone-900/30"></div>
+
+                {/* Video Corner Badge */}
+                <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-600/90 to-amber-700/90 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm font-semibold">
+                  <Sparkles className="h-4 w-4 inline mr-2" />
+                  Coleção 2024
+                </div>
               </div>
-              <p className="text-stone-300 text-lg mb-8">
-                Acompanhe nossas novidades, tendências e inspirações diárias no @onniacessorios
-              </p>
-              <Button
-                size="lg"
-                onClick={() => window.open("https://www.instagram.com/onniacessorios/", "_blank")}
-                className="bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-700 hover:to-pink-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-105"
-              >
-                <Instagram className="h-5 w-5 mr-2" />
-                @onniacessorios
-              </Button>
+
+              {/* Call to Action Buttons Below Video */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
+                <Button
+                  size="lg"
+                  onClick={() => window.open("https://www.instagram.com/onniacessorios/", "_blank")}
+                  className="bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-700 hover:to-pink-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-105"
+                >
+                  <Instagram className="h-5 w-5 mr-2" />
+                  @onniacessorios
+                </Button>
+
+                <Button
+                  size="lg"
+                  onClick={() =>
+                    window.open(
+                      "https://wa.me/5581979798540?text=Olá! Gostaria de conhecer mais sobre a coleção!",
+                      "_blank",
+                    )
+                  }
+                  className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-105"
+                >
+                  <MessageCircle className="h-5 w-5 mr-2" />
+                  Fale Conosco
+                </Button>
+              </div>
             </div>
           </div>
         </section>
@@ -728,7 +763,7 @@ export default function HomePage() {
         {/* Divider */}
         <div className="h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent"></div>
 
-        {/* Product Categories Carousels */}
+        {/* Product Categories Carousels - Only show categories with products */}
         <section className="py-24 bg-gradient-to-br from-amber-900/80 via-stone-800/80 to-amber-800/80 backdrop-blur-sm">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
@@ -738,9 +773,21 @@ export default function HomePage() {
               <p className="text-amber-300/80 text-lg">Descubra a categoria perfeita para cada ocasião</p>
             </div>
 
-            <ProductCarousel products={joias} title="💎 Joias" />
-            <ProductCarousel products={semijoias} title="✨ Semijoias" />
-            <ProductCarousel products={bijuterias} title="🌟 Bijuterias" />
+            {/* Only render carousels for categories that have products */}
+            {joias.length > 0 && <ProductCarousel products={joias} title="💎 Joias" />}
+            {semijoias.length > 0 && <ProductCarousel products={semijoias} title="✨ Semijoias" />}
+            {bijuterias.length > 0 && <ProductCarousel products={bijuterias} title="🌟 Bijuterias" />}
+
+            {/* Show message if no products in any category */}
+            {joias.length === 0 && semijoias.length === 0 && bijuterias.length === 0 && (
+              <div className="text-center py-16">
+                <div className="bg-gradient-to-br from-stone-800/30 to-stone-700/30 backdrop-blur-sm rounded-2xl p-12 border border-stone-600/40 max-w-md mx-auto">
+                  <Gem className="h-16 w-16 text-amber-400/50 mx-auto mb-4" />
+                  <p className="text-stone-300 text-lg font-medium mb-2">Produtos em breve</p>
+                  <p className="text-stone-400 text-sm">Nossa coleção está sendo preparada especialmente para você</p>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
@@ -757,152 +804,171 @@ export default function HomePage() {
               <p className="text-stone-300 text-lg">Encontre a peça perfeita que combina com seu estilo único</p>
             </div>
 
-            {/* Search and Filters */}
-            <div className="mb-12">
-              <div className="bg-gradient-to-r from-stone-800/40 to-stone-700/40 backdrop-blur-sm rounded-2xl p-6 border border-stone-600/30">
-                <div className="flex flex-col lg:flex-row gap-4">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-amber-400" />
-                    <Input
-                      type="text"
-                      placeholder="Buscar produtos..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-12 bg-stone-700/30 border-stone-600/40 text-stone-100 placeholder-stone-400/60 focus:border-amber-400 focus:ring-amber-400/20 h-12"
-                    />
-                  </div>
+            {/* Only show filters and products if there are products */}
+            {products.length > 0 ? (
+              <>
+                {/* Search and Filters */}
+                <div className="mb-12">
+                  <div className="bg-gradient-to-r from-stone-800/40 to-stone-700/40 backdrop-blur-sm rounded-2xl p-6 border border-stone-600/30">
+                    <div className="flex flex-col lg:flex-row gap-4">
+                      <div className="flex-1 relative">
+                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-amber-400" />
+                        <Input
+                          type="text"
+                          placeholder="Buscar produtos..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-12 bg-stone-700/30 border-stone-600/40 text-stone-100 placeholder-stone-400/60 focus:border-amber-400 focus:ring-amber-400/20 h-12"
+                        />
+                      </div>
 
-                  <div className="flex flex-wrap gap-3">
-                    <Select value={selectedType} onValueChange={setSelectedType}>
-                      <SelectTrigger className="w-36 bg-stone-700/30 border-stone-600/40 text-stone-100 h-12">
-                        <Filter className="h-4 w-4 mr-2 text-amber-400" />
-                        <SelectValue placeholder="Tipo" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-stone-800 border-stone-700">
-                        {types.map((type) => (
-                          <SelectItem key={type} value={type} className="text-stone-100 focus:bg-stone-700">
-                            {type === "all" ? "Todos os Tipos" : type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      <div className="flex flex-wrap gap-3">
+                        <Select value={selectedType} onValueChange={setSelectedType}>
+                          <SelectTrigger className="w-36 bg-stone-700/30 border-stone-600/40 text-stone-100 h-12">
+                            <Filter className="h-4 w-4 mr-2 text-amber-400" />
+                            <SelectValue placeholder="Tipo" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-stone-800 border-stone-700">
+                            {types.map((type) => (
+                              <SelectItem key={type} value={type} className="text-stone-100 focus:bg-stone-700">
+                                {type === "all" ? "Todos os Tipos" : type}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
 
-                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                      <SelectTrigger className="w-40 bg-stone-700/30 border-stone-600/40 text-stone-100 h-12">
-                        <SelectValue placeholder="Categoria" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-stone-800 border-stone-700">
-                        {categories.map((category) => (
-                          <SelectItem key={category} value={category} className="text-stone-100 focus:bg-stone-700">
-                            {category === "all" ? "Todas Categorias" : category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                          <SelectTrigger className="w-40 bg-stone-700/30 border-stone-600/40 text-stone-100 h-12">
+                            <SelectValue placeholder="Categoria" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-stone-800 border-stone-700">
+                            {categories.map((category) => (
+                              <SelectItem key={category} value={category} className="text-stone-100 focus:bg-stone-700">
+                                {category === "all" ? "Todas Categorias" : category}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
 
-                    <Select value={selectedColor} onValueChange={setSelectedColor}>
-                      <SelectTrigger className="w-32 bg-stone-700/30 border-stone-600/40 text-stone-100 h-12">
-                        <SelectValue placeholder="Cor" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-stone-800 border-stone-700">
-                        {colors.map((color) => (
-                          <SelectItem key={color} value={color} className="text-stone-100 focus:bg-stone-700">
-                            {color === "all" ? "Todas Cores" : color}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        <Select value={selectedColor} onValueChange={setSelectedColor}>
+                          <SelectTrigger className="w-32 bg-stone-700/30 border-stone-600/40 text-stone-100 h-12">
+                            <SelectValue placeholder="Cor" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-stone-800 border-stone-700">
+                            {colors.map((color) => (
+                              <SelectItem key={color} value={color} className="text-stone-100 focus:bg-stone-700">
+                                {color === "all" ? "Todas Cores" : color}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
 
-                    <Select value={selectedOccasion} onValueChange={setSelectedOccasion}>
-                      <SelectTrigger className="w-36 bg-stone-700/30 border-stone-600/40 text-stone-100 h-12">
-                        <SelectValue placeholder="Ocasião" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-stone-800 border-stone-700">
-                        {occasions.map((occasion) => (
-                          <SelectItem key={occasion} value={occasion} className="text-stone-100 focus:bg-stone-700">
-                            {occasion === "all" ? "Todas Ocasiões" : occasion}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        <Select value={selectedOccasion} onValueChange={setSelectedOccasion}>
+                          <SelectTrigger className="w-36 bg-stone-700/30 border-stone-600/40 text-stone-100 h-12">
+                            <SelectValue placeholder="Ocasião" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-stone-800 border-stone-700">
+                            {occasions.map((occasion) => (
+                              <SelectItem key={occasion} value={occasion} className="text-stone-100 focus:bg-stone-700">
+                                {occasion === "all" ? "Todas Ocasiões" : occasion}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Products Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {filteredProducts.map((product) => (
-                <Card
-                  key={product.id}
-                  className="group bg-gradient-to-br from-stone-800/20 to-stone-700/20 backdrop-blur-sm border border-stone-600/30 hover:border-amber-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-amber-500/10 transform hover:scale-105"
-                >
-                  <CardContent className="p-6">
-                    <div className="relative mb-6 overflow-hidden rounded-xl">
-                      <Image
-                        src={product.image || "/placeholder.svg"}
-                        alt={product.name}
-                        width={400}
-                        height={400}
-                        className="w-full h-52 object-cover transition-transform duration-700 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-stone-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                {/* Products Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                  {filteredProducts.map((product) => (
+                    <Card
+                      key={product.id}
+                      className="group bg-gradient-to-br from-stone-800/20 to-stone-700/20 backdrop-blur-sm border border-stone-600/30 hover:border-amber-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-amber-500/10 transform hover:scale-105"
+                    >
+                      <CardContent className="p-6">
+                        <div className="relative mb-6 overflow-hidden rounded-xl">
+                          <Image
+                            src={product.image || "/placeholder.svg"}
+                            alt={product.name}
+                            width={400}
+                            height={400}
+                            className="w-full h-52 object-cover transition-transform duration-700 group-hover:scale-110"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-stone-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-                      {product.featured && (
-                        <Badge className="absolute top-3 left-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white border-0">
-                          <Crown className="h-3 w-3 mr-1" />
-                          Destaque
-                        </Badge>
-                      )}
+                          {product.featured && (
+                            <Badge className="absolute top-3 left-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white border-0">
+                              <Crown className="h-3 w-3 mr-1" />
+                              Destaque
+                            </Badge>
+                          )}
 
-                      <Badge className="absolute top-3 right-3 bg-stone-900/80 backdrop-blur-sm text-amber-200 border-0 text-xs">
-                        {product.type}
-                      </Badge>
+                          <Badge className="absolute top-3 right-3 bg-stone-900/80 backdrop-blur-sm text-amber-200 border-0 text-xs">
+                            {product.type}
+                          </Badge>
+                        </div>
+
+                        <h3 className="font-bold text-stone-100 mb-3 leading-tight">{product.name}</h3>
+
+                        <p className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent mb-4">
+                          R$ {product.price.toFixed(2).replace(".", ",")}
+                        </p>
+
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          <Badge
+                            variant="secondary"
+                            className="bg-stone-700/30 text-amber-300 border-stone-600/30 text-xs"
+                          >
+                            {product.material}
+                          </Badge>
+                          <Badge
+                            variant="secondary"
+                            className="bg-stone-700/30 text-amber-300 border-stone-600/30 text-xs"
+                          >
+                            {product.size}
+                          </Badge>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Button
+                            onClick={() => handlePixClick(product)}
+                            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 shadow-lg hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105"
+                          >
+                            <QrCode className="h-4 w-4 mr-2" />
+                            Pagar com PIX
+                          </Button>
+
+                          <Button
+                            onClick={() => handleWhatsAppClick(product)}
+                            className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 shadow-lg hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-105"
+                          >
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            Falar no WhatsApp
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {filteredProducts.length === 0 && (
+                  <div className="text-center py-16">
+                    <div className="bg-gradient-to-br from-stone-800/30 to-stone-700/30 backdrop-blur-sm rounded-2xl p-12 border border-stone-600/40 max-w-md mx-auto">
+                      <Search className="h-16 w-16 text-amber-400/50 mx-auto mb-4" />
+                      <p className="text-stone-300 text-lg font-medium">Nenhum produto encontrado</p>
+                      <p className="text-stone-400 text-sm mt-2">Tente ajustar os filtros de busca</p>
                     </div>
-
-                    <h3 className="font-bold text-stone-100 mb-3 leading-tight">{product.name}</h3>
-
-                    <p className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent mb-4">
-                      R$ {product.price.toFixed(2).replace(".", ",")}
-                    </p>
-
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <Badge variant="secondary" className="bg-stone-700/30 text-amber-300 border-stone-600/30 text-xs">
-                        {product.material}
-                      </Badge>
-                      <Badge variant="secondary" className="bg-stone-700/30 text-amber-300 border-stone-600/30 text-xs">
-                        {product.size}
-                      </Badge>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Button
-                        onClick={() => handlePixClick(product)}
-                        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 shadow-lg hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105"
-                      >
-                        <QrCode className="h-4 w-4 mr-2" />
-                        Pagar com PIX
-                      </Button>
-
-                      <Button
-                        onClick={() => handleWhatsAppClick(product)}
-                        className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold py-3 shadow-lg hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-105"
-                      >
-                        <MessageCircle className="h-4 w-4 mr-2" />
-                        Falar no WhatsApp
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {filteredProducts.length === 0 && (
+                  </div>
+                )}
+              </>
+            ) : (
               <div className="text-center py-16">
                 <div className="bg-gradient-to-br from-stone-800/30 to-stone-700/30 backdrop-blur-sm rounded-2xl p-12 border border-stone-600/40 max-w-md mx-auto">
-                  <Search className="h-16 w-16 text-amber-400/50 mx-auto mb-4" />
-                  <p className="text-stone-300 text-lg font-medium">Nenhum produto encontrado</p>
-                  <p className="text-stone-400 text-sm mt-2">Tente ajustar os filtros de busca</p>
+                  <Gem className="h-16 w-16 text-amber-400/50 mx-auto mb-4" />
+                  <p className="text-stone-300 text-lg font-medium mb-2">Produtos em breve</p>
+                  <p className="text-stone-400 text-sm">Nossa coleção está sendo preparada especialmente para você</p>
                 </div>
               </div>
             )}

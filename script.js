@@ -251,6 +251,52 @@ function loadProductsFromStorage() {
   return products
 }
 
+// Show/hide category sections based on available products
+function updateCategorySections() {
+  const joias = products.filter((p) => p.type === "Joias")
+  const semijoias = products.filter((p) => p.type === "Semijoias")
+  const bijuterias = products.filter((p) => p.type === "Bijuterias")
+
+  // Show/hide sections based on product availability
+  const joiasSection = document.getElementById("joias-section")
+  const semijoisasSection = document.getElementById("semijoias-section")
+  const bijuteriasSection = document.getElementById("bijuterias-section")
+  const noProductsCategories = document.getElementById("no-products-categories")
+
+  if (joiasSection) {
+    joiasSection.style.display = joias.length > 0 ? "block" : "none"
+  }
+  if (semijoisasSection) {
+    semijoisasSection.style.display = semijoias.length > 0 ? "block" : "none"
+  }
+  if (bijuteriasSection) {
+    bijuteriasSection.style.display = bijuterias.length > 0 ? "block" : "none"
+  }
+
+  // Show no products message if no categories have products
+  if (noProductsCategories) {
+    const hasAnyProducts = joias.length > 0 || semijoias.length > 0 || bijuterias.length > 0
+    noProductsCategories.style.display = hasAnyProducts ? "none" : "block"
+  }
+}
+
+// Show/hide products section based on available products
+function updateProductsSection() {
+  const filtersSection = document.getElementById("filters-section")
+  const productsGrid = document.getElementById("products-grid")
+  const noProductsMain = document.getElementById("no-products-main")
+
+  if (products.length > 0) {
+    if (filtersSection) filtersSection.style.display = "block"
+    if (productsGrid) productsGrid.style.display = "grid"
+    if (noProductsMain) noProductsMain.style.display = "none"
+  } else {
+    if (filtersSection) filtersSection.style.display = "none"
+    if (productsGrid) productsGrid.style.display = "none"
+    if (noProductsMain) noProductsMain.style.display = "block"
+  }
+}
+
 // Sync products periodically
 function startProductSync() {
   setInterval(() => {
@@ -260,13 +306,24 @@ function startProductSync() {
       products.length = loadedProducts.length
       filteredProducts = [...products]
 
+      // Update category sections visibility
+      updateCategorySections()
+      updateProductsSection()
+
+      // Re-setup carousels only for categories with products
       const joias = products.filter((p) => p.type === "Joias")
       const semijoias = products.filter((p) => p.type === "Semijoias")
       const bijuterias = products.filter((p) => p.type === "Bijuterias")
 
-      setupCarousel("joias-carousel", "joias-prev", "joias-next", joias)
-      setupCarousel("semijoias-carousel", "semijoias-prev", "semijoias-next", semijoias)
-      setupCarousel("bijuterias-carousel", "bijuterias-prev", "bijuterias-next", bijuterias)
+      if (joias.length > 0) {
+        setupCarousel("joias-carousel", "joias-prev", "joias-next", joias)
+      }
+      if (semijoias.length > 0) {
+        setupCarousel("semijoias-carousel", "semijoias-prev", "semijoias-next", semijoias)
+      }
+      if (bijuterias.length > 0) {
+        setupCarousel("bijuterias-carousel", "bijuterias-prev", "bijuterias-next", bijuterias)
+      }
 
       renderProducts()
     }
@@ -383,10 +440,10 @@ function renderProducts() {
 
   if (!gridContainer || !noResults) return
 
-  if (filteredProducts.length === 0) {
+  if (filteredProducts.length === 0 && products.length > 0) {
     gridContainer.style.display = "none"
     noResults.style.display = "block"
-  } else {
+  } else if (products.length > 0) {
     gridContainer.style.display = "grid"
     noResults.style.display = "none"
     gridContainer.innerHTML = filteredProducts.map(createProductCard).join("")
@@ -402,13 +459,24 @@ function initializePage() {
     filteredProducts = [...products]
   }
 
+  // Update sections visibility based on available products
+  updateCategorySections()
+  updateProductsSection()
+
+  // Setup carousels only for categories with products
   const joias = products.filter((p) => p.type === "Joias")
   const semijoias = products.filter((p) => p.type === "Semijoias")
   const bijuterias = products.filter((p) => p.type === "Bijuterias")
 
-  setupCarousel("joias-carousel", "joias-prev", "joias-next", joias)
-  setupCarousel("semijoias-carousel", "semijoias-prev", "semijoias-next", semijoias)
-  setupCarousel("bijuterias-carousel", "bijuterias-prev", "bijuterias-next", bijuterias)
+  if (joias.length > 0) {
+    setupCarousel("joias-carousel", "joias-prev", "joias-next", joias)
+  }
+  if (semijoias.length > 0) {
+    setupCarousel("semijoias-carousel", "semijoias-prev", "semijoias-next", semijoias)
+  }
+  if (bijuterias.length > 0) {
+    setupCarousel("bijuterias-carousel", "bijuterias-prev", "bijuterias-next", bijuterias)
+  }
 
   startProductSync()
 

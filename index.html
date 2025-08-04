@@ -12,32 +12,13 @@
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"></script>
 </head>
 <body>
+    <!-- Background Video -->
     <div class="video-background">
-        <video id="bgVideo" autoplay loop muted playsinline>
-            <source src="public/videos/oonni_bg.mp4" type="video/mp4">
+        <video autoplay loop muted playsinline>
+            <source src="videos/hero-video.mp4" type="video/mp4">
         </video>
         <div class="video-overlay"></div>
     </div>
-    
-    <script>
-        const video = document.getElementById('bgVideo');
-        const videos = [
-            'public/videos/oonni_bg.mp4',
-            'public/videos/oonni_bg2.mp4'
-        ];
-        let currentVideo = 0;
-    
-        // Remove o atributo loop para podermos controlar manualmente
-        video.removeAttribute('loop');
-    
-        video.addEventListener('ended', function() {
-            // Alternar para o próximo vídeo
-            currentVideo = (currentVideo + 1) % videos.length;
-            video.src = videos[currentVideo];
-            video.load();
-            video.play();
-        });
-    </script>
 
     <!-- Content -->
     <div class="content-wrapper">
@@ -100,21 +81,43 @@
         <!-- Section Divider -->
         <div class="section-divider"></div>
 
-        <!-- Instagram Section -->
-        <section class="instagram-section">
+        <!-- Video Section - Substitui a seção do Instagram -->
+        <section class="video-section">
+            <div class="video-bg"></div>
             <div class="container">
-                <div class="instagram-content">
-                    <div class="section-header">
-                        <i data-lucide="instagram" class="instagram-icon"></i>
-                        <h2>Siga-nos no Instagram</h2>
-                        <i data-lucide="instagram" class="instagram-icon"></i>
+                <div class="section-header">
+                    <h2>Nossa Coleção em Destaque</h2>
+                    <p>Veja de perto a qualidade e elegância de nossos acessórios</p>
+                </div>
+                
+                <div class="video-container">
+                    <div class="video-wrapper">
+                        <video autoplay loop muted playsinline>
+                            <source src="videos/hero-video.mp4" type="video/mp4">
+                            Seu navegador não suporta vídeo HTML5.
+                        </video>
+                        
+                        <!-- Video Overlay -->
+                        <div class="video-overlay-inner"></div>
+                        
+                        <!-- Video Badge -->
+                        <div class="video-badge">
+                            <i data-lucide="sparkles"></i>
+                            Coleção 2024
+                        </div>
                     </div>
-                    <p class="instagram-text">
-                        Acompanhe nossas novidades, tendências e inspirações diárias no @onniacessorios
-                    </p>
+                </div>
+
+                <!-- Call to Action Buttons Below Video -->
+                <div class="video-cta-buttons">
                     <button class="btn btn-instagram" onclick="window.open('https://www.instagram.com/onniacessorios/', '_blank')">
                         <i data-lucide="instagram"></i>
                         @onniacessorios
+                    </button>
+                    
+                    <button class="btn btn-whatsapp" onclick="window.open('https://wa.me/5581979798540?text=Olá! Gostaria de conhecer mais sobre a coleção!', '_blank')">
+                        <i data-lucide="message-circle"></i>
+                        Fale Conosco
                     </button>
                 </div>
             </div>
@@ -123,7 +126,7 @@
         <!-- Section Divider -->
         <div class="section-divider"></div>
 
-        <!-- Product Categories -->
+        <!-- Product Categories - Only show categories with products -->
         <section class="categories-section">
             <div class="container">
                 <div class="section-header">
@@ -131,57 +134,69 @@
                     <p>Descubra a categoria perfeita para cada ocasião</p>
                 </div>
 
-                <!-- Joias Carousel -->
-                <div class="carousel-container">
-                    <div class="carousel-header">
-                        <h3>💎 Joias</h3>
-                        <div class="carousel-controls">
-                            <button class="carousel-btn" id="joias-prev">
-                                <i data-lucide="chevron-left"></i>
-                            </button>
-                            <button class="carousel-btn" id="joias-next">
-                                <i data-lucide="chevron-right"></i>
-                            </button>
+                <!-- Categories will be populated by JavaScript based on available products -->
+                <div id="categories-container">
+                    <!-- Joias Carousel -->
+                    <div class="carousel-container" id="joias-section" style="display: none;">
+                        <div class="carousel-header">
+                            <h3>💎 Joias</h3>
+                            <div class="carousel-controls">
+                                <button class="carousel-btn" id="joias-prev">
+                                    <i data-lucide="chevron-left"></i>
+                                </button>
+                                <button class="carousel-btn" id="joias-next">
+                                    <i data-lucide="chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="carousel" id="joias-carousel">
+                            <!-- Products will be populated by JavaScript -->
                         </div>
                     </div>
-                    <div class="carousel" id="joias-carousel">
-                        <!-- Products will be populated by JavaScript -->
-                    </div>
-                </div>
 
-                <!-- Semijoias Carousel -->
-                <div class="carousel-container">
-                    <div class="carousel-header">
-                        <h3>✨ Semijoias</h3>
-                        <div class="carousel-controls">
-                            <button class="carousel-btn" id="semijoias-prev">
-                                <i data-lucide="chevron-left"></i>
-                            </button>
-                            <button class="carousel-btn" id="semijoias-next">
-                                <i data-lucide="chevron-right"></i>
-                            </button>
+                    <!-- Semijoias Carousel -->
+                    <div class="carousel-container" id="semijoias-section" style="display: none;">
+                        <div class="carousel-header">
+                            <h3>✨ Semijoias</h3>
+                            <div class="carousel-controls">
+                                <button class="carousel-btn" id="semijoias-prev">
+                                    <i data-lucide="chevron-left"></i>
+                                </button>
+                                <button class="carousel-btn" id="semijoias-next">
+                                    <i data-lucide="chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="carousel" id="semijoias-carousel">
+                            <!-- Products will be populated by JavaScript -->
                         </div>
                     </div>
-                    <div class="carousel" id="semijoias-carousel">
-                        <!-- Products will be populated by JavaScript -->
-                    </div>
-                </div>
 
-                <!-- Bijuterias Carousel -->
-                <div class="carousel-container">
-                    <div class="carousel-header">
-                        <h3>🌟 Bijuterias</h3>
-                        <div class="carousel-controls">
-                            <button class="carousel-btn" id="bijuterias-prev">
-                                <i data-lucide="chevron-left"></i>
-                            </button>
-                            <button class="carousel-btn" id="bijuterias-next">
-                                <i data-lucide="chevron-right"></i>
-                            </button>
+                    <!-- Bijuterias Carousel -->
+                    <div class="carousel-container" id="bijuterias-section" style="display: none;">
+                        <div class="carousel-header">
+                            <h3>🌟 Bijuterias</h3>
+                            <div class="carousel-controls">
+                                <button class="carousel-btn" id="bijuterias-prev">
+                                    <i data-lucide="chevron-left"></i>
+                                </button>
+                                <button class="carousel-btn" id="bijuterias-next">
+                                    <i data-lucide="chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="carousel" id="bijuterias-carousel">
+                            <!-- Products will be populated by JavaScript -->
                         </div>
                     </div>
-                    <div class="carousel" id="bijuterias-carousel">
-                        <!-- Products will be populated by JavaScript -->
+
+                    <!-- No Products Message -->
+                    <div class="no-products-categories" id="no-products-categories" style="display: none;">
+                        <div class="no-products-content">
+                            <i data-lucide="gem" class="no-products-icon"></i>
+                            <p class="no-products-title">Produtos em breve</p>
+                            <p class="no-products-text">Nossa coleção está sendo preparada especialmente para você</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -198,50 +213,62 @@
                     <p>Encontre a peça perfeita que combina com seu estilo único</p>
                 </div>
 
-                <!-- Filters -->
-                <div class="filters">
-                    <div class="filter-group">
-                        <div class="search-container">
-                            <i data-lucide="search" class="search-icon"></i>
-                            <input type="text" id="search-input" class="search-input" placeholder="Buscar produtos...">
+                <!-- Products Content -->
+                <div id="products-content">
+                    <!-- Filters -->
+                    <div class="filters" id="filters-section" style="display: none;">
+                        <div class="filter-group">
+                            <div class="search-container">
+                                <i data-lucide="search" class="search-icon"></i>
+                                <input type="text" id="search-input" class="search-input" placeholder="Buscar produtos...">
+                            </div>
+                        </div>
+                        <div class="filter-group">
+                            <select id="type-filter" class="filter-select">
+                                <option value="all">Todos os Tipos</option>
+                                <option value="Joias">Joias</option>
+                                <option value="Semijoias">Semijoias</option>
+                                <option value="Bijuterias">Bijuterias</option>
+                            </select>
+                            <select id="category-filter" class="filter-select">
+                                <option value="all">Todas Categorias</option>
+                                <option value="Colares">Colares</option>
+                                <option value="Brincos">Brincos</option>
+                                <option value="Pulseiras">Pulseiras</option>
+                                <option value="Anéis">Anéis</option>
+                                <option value="Conjuntos">Conjuntos</option>
+                            </select>
+                            <select id="color-filter" class="filter-select">
+                                <option value="all">Todas Cores</option>
+                                <option value="Dourado">Dourado</option>
+                                <option value="Prata">Prata</option>
+                                <option value="Branco">Branco</option>
+                                <option value="Multicolor">Multicolor</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="filter-group">
-                        <select id="type-filter" class="filter-select">
-                            <option value="all">Todos os Tipos</option>
-                            <option value="Joias">Joias</option>
-                            <option value="Semijoias">Semijoias</option>
-                            <option value="Bijuterias">Bijuterias</option>
-                        </select>
-                        <select id="category-filter" class="filter-select">
-                            <option value="all">Todas Categorias</option>
-                            <option value="Colares">Colares</option>
-                            <option value="Brincos">Brincos</option>
-                            <option value="Pulseiras">Pulseiras</option>
-                            <option value="Anéis">Anéis</option>
-                            <option value="Conjuntos">Conjuntos</option>
-                        </select>
-                        <select id="color-filter" class="filter-select">
-                            <option value="all">Todas Cores</option>
-                            <option value="Dourado">Dourado</option>
-                            <option value="Prata">Prata</option>
-                            <option value="Branco">Branco</option>
-                            <option value="Multicolor">Multicolor</option>
-                        </select>
+
+                    <!-- Products Grid -->
+                    <div class="products-grid" id="products-grid">
+                        <!-- Products will be populated by JavaScript -->
                     </div>
-                </div>
 
-                <!-- Products Grid -->
-                <div class="products-grid" id="products-grid">
-                    <!-- Products will be populated by JavaScript -->
-                </div>
+                    <!-- No Results -->
+                    <div class="no-results" id="no-results" style="display: none;">
+                        <div class="no-results-content">
+                            <i data-lucide="search" class="no-results-icon"></i>
+                            <p class="no-results-title">Nenhum produto encontrado</p>
+                            <p class="no-results-text">Tente ajustar os filtros de busca</p>
+                        </div>
+                    </div>
 
-                <!-- No Results -->
-                <div class="no-results" id="no-results" style="display: none;">
-                    <div class="no-results-content">
-                        <i data-lucide="search" class="no-results-icon"></i>
-                        <p class="no-results-title">Nenhum produto encontrado</p>
-                        <p class="no-results-text">Tente ajustar os filtros de busca</p>
+                    <!-- No Products at All -->
+                    <div class="no-products-main" id="no-products-main" style="display: none;">
+                        <div class="no-products-content">
+                            <i data-lucide="gem" class="no-products-icon"></i>
+                            <p class="no-products-title">Produtos em breve</p>
+                            <p class="no-products-text">Nossa coleção está sendo preparada especialmente para você</p>
+                        </div>
                     </div>
                 </div>
             </div>
